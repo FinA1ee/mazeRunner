@@ -1,0 +1,24 @@
+{
+  "name": "mazerunner",
+  "version": "1.0.0",
+  "description": "A maze game powered by Three.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "testMaze": "node mazeGenerator.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/j97zhu/mazeRunner.git"
+  },
+  "author": "FinAle1891",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/j97zhu/mazeRunner/issues"
+  },
+  "homepage": "https://github.com/j97zhu/mazeRunner#readme",
+  "dependencies": {
+    "maze-generation": "^3.0.1",
+    "three": "^0.143.0"
+  }
+}
