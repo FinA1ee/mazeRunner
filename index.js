@@ -11,7 +11,7 @@ window.onload = () => {
   if (container) {
     board = Board.getInstance({
       container,
-      dim: 10
+      dim: 20
     });
   }
 
@@ -26,7 +26,6 @@ const handleGameStart = (e) => {
 }
 
 const handleKeyInput = (e) => {
-  console.log(e)
   if (e.key && e.code === 'ArrowUp') {
     board.moveHero('up');
   } else if (e.key && e.code === 'ArrowDown') {
@@ -36,6 +35,7 @@ const handleKeyInput = (e) => {
   } else if (e.key && e.code === 'ArrowRight') {
     board.moveHero('right');
   }
+  e.stopPropagation();
 }
 
 

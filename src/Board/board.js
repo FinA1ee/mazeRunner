@@ -1,7 +1,7 @@
-// import Hero from './MazeObject/hero';
-import Maze from './Maze/maze';
 import * as Three from 'three';
-
+import OrbitControls from 'three-orbitcontrols';
+import Maze from './Maze/maze';
+import Hero from './Maze/MazeObject/hero';
 
 const DEFAULT_OPTIONS = {
   row: 10,
@@ -50,7 +50,11 @@ class Board {
     const camera = new Three.PerspectiveCamera(fov, aspect, near, far);
     camera.position.z = 15;
     camera.position.y = 5;
-    camera.position.x = 5;
+    camera.position.x = 0;
+    camera.rotation.x = 0.25;
+
+    const controls = new OrbitControls( camera, renderer.domElement );
+    controls.update();
     const scene = new Three.Scene();
     this.scene = scene;
 
@@ -109,7 +113,7 @@ class Board {
         camera.updateProjectionMatrix();
       }
       
-
+      controls.update();
       renderer.render(scene, camera);
       requestAnimationFrame(render);
     }
@@ -118,26 +122,37 @@ class Board {
     requestAnimationFrame(render);
   }
 
-  // moveHero(direction) {
-  //   switch(direction) {
-  //     case 'up':
-  //       this.hero.position.z++;
-  //       break;
-  //     case 'down':
-  //       this.hero.position.z--;
-  //       break;
-  //     case 'left':
-  //       this.hero.position.x--;
-  //       break;
-  //     case 'right':
-  //       this.hero.position.x++;
-  //       break
-  //   }
-  // }
+  moveHero(direction) {
+    this.maze.moveHero(direction);
+  }
 
   initGame() {
+
+    // clear scene
+    
+    
+    // rerender board
+
+
+
+    // rerender maze
+
+    if (this.maze) {
+      this.maze.destory();
+      this.scene.remove.apply(this.scene, this.scene.children);
+
+      const color = 0xFFFFFF;
+      const intensity = 1;
+      const light = new Three.DirectionalLight(color, intensity);
+      light.position.set(-1, 2, 4);
+      this.scene.add(light);
+    }
+
     this.maze = new Maze(this.scene, this.dim);
     this.maze.renderMaze();
+
+    // this.hero = new Hero(this.scene, 0, 0);
+    // this.hero.renderObject();
     // create maze
     // create hero & monsters & gold
     // put them on the scene

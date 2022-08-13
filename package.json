@@ -22,7 +22,8 @@
   "dependencies": {
     "@babel/core": "^7.18.10",
     "maze-generation": "^3.0.1",
-    "three": "^0.143.0"
+    "three": "^0.110.0",
+    "three-orbitcontrols": "^2.110.3"
   },
   "devDependencies": {
     "@babel/preset-env": "^7.18.10",

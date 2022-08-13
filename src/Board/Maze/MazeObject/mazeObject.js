@@ -1,18 +1,12 @@
 import * as Three from 'three';
+import Geometry from '../geometry';
 
-class MazeObject {
+class MazeObject extends Geometry {
 
-  constructor(geometry, x, y) {
-    this.geometry = geometry;
-    this.locaton = {x, y};
+  constructor(scene) {
+    super();
+    this.scene = scene;
   }
-
-  applyMaterial(material) {
-
-  }
-
-  destroy() {
-
-  }
-
 }
+
+export default MazeObject;
