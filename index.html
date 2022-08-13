@@ -5,11 +5,31 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
+
+  <style>
+    html, body {
+       margin: 0;
+       height: 100%;
+    }
+    #panel {
+      position: absolute;
+    }
+    #container {
+       width: 100%;
+       height: 100%;
+       display: block;
+    }
+  </style>
+
 </head>
 <body>
-  
 
-  <canvas id="board"></canvas>>
-  <script></script>
+  <div id="panel">
+    <button id="start">Start Game</button>
+  </div>
+  
+  <div id="container">
+  </div>
+  <script type="module" src="bundle.js"></script>
 </body>
 </html>

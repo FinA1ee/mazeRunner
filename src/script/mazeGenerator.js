@@ -1,6 +1,5 @@
 const mazeGeneration = require("maze-generation");
 
-
 const generateMaze = (height, width) => {
   const options = {
     width,
@@ -17,11 +16,8 @@ const generateMaze = (height, width) => {
   //   }
   // }
 
-  let maze = mazeGeneration(options)
-  // console.log(maze.toString());
-  parseMaze(maze.toJSON());
-  // console.log(maze.toJSON());
+  let mazeData = mazeGeneration(options).toJSON();
+  return mazeData;
 }
 
-
-generateMaze(5, 5);
+export default generateMaze;
