@@ -5,13 +5,14 @@ import Hero from "./MazeObject/hero";
 class Maze {
 
   constructor(scene, dim) {
+    console.log(scene);
     if (typeof dim === 'undefined') {
       console.error("Invalid Maze Parameter");
       return;
     }
     this.dim = dim;
     this.scene = scene;
-    this.hero = new Hero(scene, 0, 0);
+    this.hero = new Hero(scene, 10, 10);
 
     const mazeRawData = mazeGeneration({
       width: dim,
@@ -29,14 +30,12 @@ class Maze {
       this.blockData.push(temp);
     }
 
-
   }
 
-  renderMaze() {
+  renderMaze(isNoWall) {
     this.iterateBlock((i, j) => {
-      this.blockData[i][j].renderObject();
+      this.blockData[i][j].renderObject(isNoWall);
     })
-
     this.hero.renderObject();
   }
 

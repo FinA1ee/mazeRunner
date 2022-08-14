@@ -1,42 +1,52 @@
-import Board from "./src/Board/board";
+import Game from "./src/game/game";
 
+function onDrag(element, x, y) {
+  
+}
 
-let board;
+let game;
 
 window.onload = () => {
   const container = document.getElementById("container");
-
+  const panel = document.getElementById("panel");
+  new Draggable(panel, onDrag);
   const gameStartBtn = document.getElementById("start");
 
   if (container) {
-    board = Board.getInstance({
+    game = Game.getInstance({
       container,
       dim: 20
     });
   }
 
-  if (board && gameStartBtn) {
+  if (game && gameStartBtn) {
     gameStartBtn.addEventListener('click', handleGameStart);
   }
 
 }
 
 const handleGameStart = (e) => {
-  board.initGame();
+  game && game.initGame();
 }
 
-const handleKeyInput = (e) => {
-  if (e.key && e.code === 'ArrowUp') {
-    board.moveHero('up');
-  } else if (e.key && e.code === 'ArrowDown') {
-    board.moveHero('down');
-  } else if (e.key && e.code === 'ArrowLeft') {
-    board.moveHero('left');
-  } else if (e.key && e.code === 'ArrowRight') {
-    board.moveHero('right');
+const handleHeroMoveInput = (e) => {
+  if (e.key && e.code === 'KeyW') {
+    game.moveHero('up');
+  } else if (e.key && e.code === 'KeyS') {
+    game.moveHero('down');
+  } else if (e.key && e.code === 'KeyA') {
+    game.moveHero('left');
+  } else if (e.key && e.code === 'KeyD') {
+    game.moveHero('right');
   }
-  e.stopPropagation();
+}
+
+const handleGameStartInput = (e) => {
+  if (e.key && e.code === 'KeyR') {
+    game && game.initGame();
+  }
 }
 
 
-window.addEventListener('keydown', handleKeyInput);
+window.addEventListener('keydown', handleHeroMoveInput);
+window.addEventListener('keydown', handleGameStartInput);

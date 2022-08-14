@@ -1,5 +1,11 @@
 import MazeObject from './mazeObject';
-import * as Three from 'three';
+import { themeColors } from '../../consts/colorConfig';
+import geometryCreator from '../../../utils/threeGeometryCreator';
+
+const heroConfig = {
+  color: themeColors.hero,
+  radius: 0.5
+}
 
 class Hero extends MazeObject {
   
@@ -12,15 +18,13 @@ class Hero extends MazeObject {
 
 
   renderObject() {
-    const radius = 0.5;
-    const geo = new Three.OctahedronGeometry(radius)
-    const material = new Three.MeshPhongMaterial({color: 0x66CCFF});
-    const hero = new Three.Mesh(geo, material);
-    this.heroGeo = hero;
-    this.scene.add(this.heroGeo);
+    let hero = geometryCreator('hero', heroConfig);
     hero.position.x = this.location.col;
     hero.position.y = 0.6;
     hero.position.z = this.location.row;
+    this.scene.add(hero);
+
+    this.hero = hero;
   }
 
   getLocation() {
@@ -30,19 +34,19 @@ class Hero extends MazeObject {
   move(direction) {
     switch(direction) {
       case 'up': 
-        this.heroGeo.position.z--;
+        this.hero.position.z--;
         this.location.row--;
         break;
       case 'down': 
-        this.heroGeo.position.z++;
+        this.hero.position.z++;
         this.location.row++;
         break;
       case 'left': 
-        this.heroGeo.position.x--;
+        this.hero.position.x--;
         this.location.col--;
         break;
       case 'right': 
-        this.heroGeo.position.x++;
+        this.hero.position.x++;
         this.location.col++;
         break;
       default: break;

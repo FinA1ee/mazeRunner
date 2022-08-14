@@ -21,6 +21,7 @@
   "homepage": "https://github.com/j97zhu/mazeRunner#readme",
   "dependencies": {
     "@babel/core": "^7.18.10",
+    "draggable": "^4.2.0",
     "maze-generation": "^3.0.1",
     "three": "^0.110.0",
     "three-orbitcontrols": "^2.110.3"
