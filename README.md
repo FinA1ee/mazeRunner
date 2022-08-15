@@ -6,5 +6,5 @@ A simple 3D maze game powered by Web Dev Server and Three.js.
 - Avoid creatures.
 - Run to Exit and Stay Alive!!!
 
-![screenshot](screenshot.png);
+![screenshot](screenshot.png)
 
