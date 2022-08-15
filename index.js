@@ -15,13 +15,17 @@ window.onload = () => {
   if (container) {
     game = Game.getInstance({
       container,
-      dim: 20
+      dim: 19
     });
+
+    window.addEventListener('keydown', handleHeroSelection);
+    window.addEventListener('keydown', handleGameStartInput);
   }
 
-  if (game && gameStartBtn) {
+  if (gameStartBtn) {
     gameStartBtn.addEventListener('click', handleGameStart);
   }
+
 
 }
 
@@ -47,6 +51,14 @@ const handleGameStartInput = (e) => {
   }
 }
 
+const handleHeroSelection = (e) => {
+  if (e.key && e.code === 'ArrowLeft') {
+    game && game.changeHero(false);
+  } else if (e.key && e.code === 'ArrowRight') {
+    game && game.changeHero(true);
+  }
+}
 
-window.addEventListener('keydown', handleHeroMoveInput);
-window.addEventListener('keydown', handleGameStartInput);
+
+
+// window.addEventListener('keydown', handleHeroMoveInput);

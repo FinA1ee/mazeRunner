@@ -18,11 +18,13 @@ window.onload = function () {
   if (container) {
     game = _game["default"].getInstance({
       container: container,
-      dim: 20
+      dim: 19
     });
+    window.addEventListener('keydown', handleHeroSelection);
+    window.addEventListener('keydown', handleGameStartInput);
   }
 
-  if (game && gameStartBtn) {
+  if (gameStartBtn) {
     gameStartBtn.addEventListener('click', handleGameStart);
   }
 };
@@ -49,10 +51,15 @@ var handleGameStartInput = function handleGameStartInput(e) {
   }
 };
 
-window.addEventListener('keydown', handleHeroMoveInput);
-window.addEventListener('keydown', handleGameStartInput);
+var handleHeroSelection = function handleHeroSelection(e) {
+  if (e.key && e.code === 'ArrowLeft') {
+    game && game.changeHero(false);
+  } else if (e.key && e.code === 'ArrowRight') {
+    game && game.changeHero(true);
+  }
+}; // window.addEventListener('keydown', handleHeroMoveInput);
 
-},{"./src/game/game":11}],2:[function(require,module,exports){
+},{"./src/game/game":13}],2:[function(require,module,exports){
 const Generator = require('./src/Generator');
 const Prando = require('prando');
 
@@ -52032,7 +52039,22 @@ THREE.MapControls.prototype.constructor = THREE.MapControls;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.mainCameraConfig = void 0;
+exports["default"] = void 0;
+var blockConfig = {
+  boxWidth: 1,
+  boxHeight: 0.1,
+  boxDepth: 1
+};
+var _default = blockConfig;
+exports["default"] = _default;
+
+},{}],10:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.orbitControlConfig = exports.mainCameraConfig = void 0;
 var mainCameraConfig = {
   fov: 90,
   aspect: 2,
@@ -52040,14 +52062,23 @@ var mainCameraConfig = {
   far: 100,
   position: {
     x: 10,
-    y: 15,
+    y: 10,
     z: 25
   },
   rotation: {
-    x: -0.75,
+    x: -0.5,
     y: 0,
     z: 0
   }
+};
+exports.mainCameraConfig = mainCameraConfig;
+var orbitControlConfig = {
+  position: {
+    x: 10,
+    y: 4,
+    z: 10
+  },
+  autoRotate: true
 }; // const mainCameraConfig = {
 //   fov: 90,
 //   aspect: 2,
@@ -52065,25 +52096,123 @@ var mainCameraConfig = {
 //   }
 // }
 
-exports.mainCameraConfig = mainCameraConfig;
+exports.orbitControlConfig = orbitControlConfig;
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.themeColors = void 0;
+exports.themeTexture = exports.themeColors = void 0;
 var themeColors = {
   background: 0x000000,
   wall: 0x8fb1e9,
-  block: 0x220e24,
   hero: 0xf6f18c,
-  light: 0xffffff
+  light: 0xffffff,
+  getBlockColor: function getBlockColor() {
+    return Math.floor(Math.random() * 0x1FFFFF);
+  }
 };
 exports.themeColors = themeColors;
+var themeTexture = {
+  wall: 'src/assets/textures/wall.jpeg'
+};
+exports.themeTexture = themeTexture;
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var getHeroConfig = function getHeroConfig(selection, gameStatus) {
+  return {
+    location: getHeroInitalLocation(gameStatus),
+    geoConfig: getHeroGeoConfig(selection, gameStatus)
+  };
+}; // 1
+
+
+var octahedronHero = function octahedronHero(gameStatus) {
+  return {
+    selection: 'octa',
+    radius: gameStatus === 'Hero Selection' ? 1.5 : 0.5
+  };
+}; // 2
+
+
+var cylinderHero = function cylinderHero(gameStatus) {
+  return {
+    selection: 'cyclinder',
+    radiusTop: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
+    radiusBottom: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
+    height: gameStatus === 'Hero Selection' ? 2 : 1,
+    radialSegments: 6
+  };
+}; // 3
+
+
+var coneHero = function coneHero(gameStatus) {
+  return {
+    selection: 'cone',
+    radius: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
+    height: 2,
+    radialSegment: 8
+  };
+}; // 4
+
+
+var sphereHero = function sphereHero(gameStatus) {
+  return {
+    selection: 'sphere',
+    radius: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
+    widthSegment: 20,
+    heightSegments: 20
+  };
+};
+
+var getHeroGeoConfig = function getHeroGeoConfig(selection, gameStatus) {
+  switch (selection) {
+    case 2:
+      return cylinderHero(gameStatus);
+
+    case 3:
+      return coneHero(gameStatus);
+
+    case 1:
+      return octahedronHero(gameStatus);
+
+    case 4:
+      return sphereHero(gameStatus);
+
+    default:
+      return octahedronHero(gameStatus);
+  }
+};
+
+var getHeroInitalLocation = function getHeroInitalLocation(gameStatus) {
+  if (gameStatus === 'Hero Selection') {
+    return {
+      x: 9,
+      y: 2,
+      z: 9
+    };
+  } else {
+    return {
+      x: 0,
+      y: 0.5,
+      z: 0
+    };
+  }
+};
+
+var _default = getHeroConfig;
+exports["default"] = _default;
+
+},{}],13:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52093,9 +52222,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var Three = _interopRequireWildcard(require("three"));
-
 var _threeBasicsCreator = require("../utils/threeBasicsCreator");
+
+var _threeGeometryCreator = _interopRequireDefault(require("../utils/threeGeometryCreator"));
 
 var _threeUtilsCreator = require("../utils/threeUtilsCreator");
 
@@ -52103,15 +52232,19 @@ var _cameraConfigs = require("./consts/cameraConfigs");
 
 var _colorConfig = require("./consts/colorConfig");
 
-var _threeOrbitcontrols = _interopRequireDefault(require("three-orbitcontrols"));
+var Three = _interopRequireWildcard(require("three"));
 
 var _maze = _interopRequireDefault(require("./maze/maze"));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+var _hero = _interopRequireDefault(require("./hero"));
+
+var _heroConfig = _interopRequireDefault(require("./consts/heroConfig"));
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -52129,34 +52262,79 @@ var Game = /*#__PURE__*/function () {
         dim = options.dim;
     this.dim = dim;
     this.container = container;
-    /** 创建场景 */
+    /** 创建渲染器 */
 
     this.renderer = (0, _threeBasicsCreator.rendererCreator)();
-    this.mainCamera = (0, _threeBasicsCreator.cameraCreator)(_cameraConfigs.mainCameraConfig);
-    this.controls = new _threeOrbitcontrols["default"](this.mainCamera, this.renderer.domElement);
-    this.controls.target.set(10, 4, 10);
-    this.controls.update();
+    /** 创建摄像头 */
+
+    this.mainCamera = (0, _threeBasicsCreator.cameraCreator)(_cameraConfigs.mainCameraConfig); // this.orbitControl = orbitControlCreator(this.mainCamera, this.renderer.domElement, orbitControlConfig);
+    // this.orbitControl.update();
+
+    /** 创建灯光 */
+
     this.light = (0, _threeUtilsCreator.lightCreator)(_colorConfig.themeColors.light, 1);
     this.light.position.set(-1, 2, 10);
-    this.scene = (0, _threeBasicsCreator.sceneCreator)();
+    var scene = (0, _threeBasicsCreator.sceneCreator)();
+    this.scene = scene;
     this.scene.add(this.light);
     this.scene.background = (0, _threeUtilsCreator.colorCreator)(_colorConfig.themeColors.background);
-    /** 开始渲染 */
-    // this.renderer.render(this.scene, this.mainCamera);
-
     /** 加入外部容器 */
 
     container.appendChild(this.renderer.domElement);
     /** 创建迷宫实例 */
 
     this.maze = new _maze["default"](this.scene, this.dim);
-    this.maze.renderMaze(true);
+    this.maze.renderObject();
+    /** 创建英雄实例 */
+
+    this.heroSelection = 1;
+    this.hero = new _hero["default"](this.scene);
+    this.hero.renderObject((0, _heroConfig["default"])(this.heroSelection, Game.status)); // let text = textCreator('text');
+    // text.position.x = 0;
+
+    var height = 2,
+        size = 3;
+    var textGeo;
+    var loader = new Three.FontLoader();
+    loader.load('src/assets/fonts/helvetiker_regular.typeface.json', function (font) {
+      var text = new Three.TextGeometry("Maze Runner", {
+        font: font,
+        size: size,
+        height: height
+      });
+      text.computeBoundingBox();
+      var centerOffset = -0.5 * (text.boundingBox.max.x - text.boundingBox.min.x);
+      var material = [new Three.MeshPhongMaterial({
+        color: 0xffffff,
+        flatShading: true
+      }), // front
+      new Three.MeshPhongMaterial({
+        color: 0xffffff
+      }) // side
+      ];
+      textGeo = new Three.Mesh(text, material);
+      textGeo.position.x = 10 + centerOffset;
+      textGeo.position.y = 10;
+      textGeo.position.z = 0;
+      scene.add(textGeo);
+    });
     /** 开始渲染 */
 
     this.render();
+    console.log(this.scene);
+    Game.status = 'Hero Selection';
   }
 
   _createClass(Game, [{
+    key: "changeHero",
+    value: function changeHero(direction) {
+      if (Game.status === 'Hero Selection') {
+        if (direction) this.heroSelection = this.heroSelection + 1 === 5 ? 1 : this.heroSelection + 1;else this.heroSelection = this.heroSelection - 1 === 0 ? 4 : this.heroSelection - 1;
+      }
+
+      this.hero.renderObject((0, _heroConfig["default"])(this.heroSelection, Game.status));
+    }
+  }, {
     key: "render",
     value: function render() {
       var renderer = this.renderer;
@@ -52164,19 +52342,28 @@ var Game = /*#__PURE__*/function () {
       var container = this.container;
       var camera = this.mainCamera;
       var scene = this.scene;
-      var control = this.controls;
-      console.log(canvas.clientWidth, this.container.clientWidth);
+      var hero = this.hero;
+      var control = this.orbitControl;
+
+      function resizeRendererToDisplaySize(renderer, container) {
+        var canvas = renderer.domElement;
+        var width = container.clientWidth;
+        var height = container.clientHeight;
+        var needResize = canvas.width !== width || canvas.height !== height;
+        return needResize;
+      }
 
       function animate(time) {
         time *= 0.001; // convert time to seconds
 
-        if ((0, _threeBasicsCreator.resizeRendererToDisplaySize)(renderer, container)) {
+        if (resizeRendererToDisplaySize(renderer, container)) {
           renderer.setSize(container.clientWidth, container.clientHeight, false);
           camera.aspect = canvas.clientWidth / canvas.clientHeight;
           camera.updateProjectionMatrix();
-        }
+        } // control.update();
 
-        control.update();
+
+        if (Game.status === 'Hero Selection') hero.rotateObject(time);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.render(scene, camera);
         requestAnimationFrame(animate);
@@ -52187,12 +52374,13 @@ var Game = /*#__PURE__*/function () {
   }, {
     key: "moveHero",
     value: function moveHero(direction) {
-      this.maze.moveHero(direction);
+      var validMove = this.maze.checkMove(direction, this.hero.getLocation());
+      if (validMove) this.hero.move(direction);
     }
   }, {
     key: "initGame",
     value: function initGame() {
-      // maze generate the wall data
+      Game.status = 'Game Begin'; // maze generate the wall data
       // maze generate the hero data
       // render
       // if (this.maze) {
@@ -52200,7 +52388,9 @@ var Game = /*#__PURE__*/function () {
       //   this.scene.remove.apply(this.scene, this.scene.children);
       // }
       // this.scene.remove.apply(this.scene, this.scene.children);
-      this.maze.renderMaze();
+
+      this.maze.generateMaze();
+      this.hero.renderObject((0, _heroConfig["default"])(this.heroSelection, Game.status));
     }
   }, {
     key: "restart",
@@ -52213,6 +52403,8 @@ var Game = /*#__PURE__*/function () {
   return Game;
 }();
 
+_defineProperty(Game, "status", 'Hero Selection' || 'Game Begin' || 'Game End');
+
 _defineProperty(Game, "instance", null);
 
 _defineProperty(Game, "getInstance", function () {
@@ -52224,7 +52416,7 @@ _defineProperty(Game, "getInstance", function () {
 var _default = Game;
 exports["default"] = _default;
 
-},{"../utils/threeBasicsCreator":17,"../utils/threeUtilsCreator":19,"./consts/cameraConfigs":9,"./consts/colorConfig":10,"./maze/maze":16,"three":8,"three-orbitcontrols":7}],12:[function(require,module,exports){
+},{"../utils/threeBasicsCreator":18,"../utils/threeGeometryCreator":19,"../utils/threeUtilsCreator":20,"./consts/cameraConfigs":10,"./consts/colorConfig":11,"./consts/heroConfig":12,"./hero":14,"./maze/maze":16,"three":8}],14:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52234,17 +52426,17 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _mazeObject = _interopRequireDefault(require("../MazeObject/mazeObject"));
+var _threeGeometryCreator = _interopRequireDefault(require("../utils/threeGeometryCreator"));
 
-var Three = _interopRequireWildcard(require("three"));
+var _geometry = _interopRequireDefault(require("../utils/geometry"));
 
-var _threeGeometryCreator = _interopRequireDefault(require("../../../utils/threeGeometryCreator"));
+var _colorConfig = require("./consts/colorConfig");
 
-var _colorConfig = require("../../consts/colorConfig");
+var _heroConfig = _interopRequireDefault(require("./consts/heroConfig"));
 
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+var _threeUtilsCreator = require("../utils/threeUtilsCreator");
 
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+var _threeBasicsCreator = require("../utils/threeBasicsCreator");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -52268,173 +52460,58 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-var getBlockConfig = function getBlockConfig(shouldRandomColor) {
-  return {
-    color: shouldRandomColor ? Math.floor(Math.random() * 0xFFFFFF) : _colorConfig.themeColors.block,
-    boxWidth: 1,
-    boxHeight: 0.1,
-    boxDepth: 1
-  };
-};
-
-var Block = /*#__PURE__*/function (_MazeObject) {
-  _inherits(Block, _MazeObject);
-
-  var _super = _createSuper(Block);
-
-  function Block(scene, wallCondition, row, col) {
-    var _this;
-
-    _classCallCheck(this, Block);
-
-    _this = _super.call(this, scene, row, col); // up, down, left, right
-
-    _this.walls = [];
-
-    _this.walls.push(wallCondition.up || null);
-
-    _this.walls.push(wallCondition.down || null);
-
-    _this.walls.push(wallCondition.left || null);
-
-    _this.walls.push(wallCondition.right || null);
-
-    _this.location = {
-      row: row,
-      col: col
-    };
-    return _this;
-  }
-
-  _createClass(Block, [{
-    key: "renderObject",
-    value: function renderObject(isNoWall) {
-      var cube = (0, _threeGeometryCreator["default"])('block', getBlockConfig(isNoWall));
-
-      if (!isNoWall) {
-        if (this.walls[0]) this.renderWall(1, 1, 0.1, this.location.row - 0.5, 0.6, this.location.col);
-        if (this.walls[1]) this.renderWall(1, 1, 0.1, this.location.row + 0.5, 0.6, this.location.col);
-        if (this.walls[2]) this.renderWall(0.1, 1, 1, this.location.row, 0.6, this.location.col - 0.5);
-        if (this.walls[3]) this.renderWall(0.1, 1, 1, this.location.row, 0.6, this.location.col + 0.5);
-      }
-
-      this.scene.add(cube);
-      cube.position.x = this.location.col;
-      cube.position.z = this.location.row;
-    }
-  }, {
-    key: "renderWall",
-    value: function renderWall(width, height, depth, x, y, z) {
-      var wallConfig = {
-        color: _colorConfig.themeColors.wall,
-        boxWidth: width,
-        boxHeight: height,
-        boxDepth: depth
-      };
-      var wall = (0, _threeGeometryCreator["default"])('block', wallConfig);
-      wall.position.x = z;
-      wall.position.y = y;
-      wall.position.z = x;
-      this.scene.add(wall);
-    }
-  }, {
-    key: "checkMove",
-    value: function checkMove(direction) {
-      switch (direction) {
-        case 'up':
-          return this.walls[0] === null;
-
-        case 'down':
-          return this.walls[1] === null;
-
-        case 'left':
-          return this.walls[2] === null;
-
-        case 'right':
-          return this.walls[3] === null;
-
-        default:
-          break;
-      }
-    }
-  }]);
-
-  return Block;
-}(_mazeObject["default"]);
-
-var _default = Block;
-exports["default"] = _default;
-
-},{"../../../utils/threeGeometryCreator":18,"../../consts/colorConfig":10,"../MazeObject/mazeObject":14,"three":8}],13:[function(require,module,exports){
-"use strict";
-
-function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports["default"] = void 0;
-
-var _mazeObject = _interopRequireDefault(require("./mazeObject"));
-
-var _colorConfig = require("../../consts/colorConfig");
-
-var _threeGeometryCreator = _interopRequireDefault(require("../../../utils/threeGeometryCreator"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
-
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-
-function _createSuper(Derived) { var hasNativeReflectConstruct = _isNativeReflectConstruct(); return function _createSuperInternal() { var Super = _getPrototypeOf(Derived), result; if (hasNativeReflectConstruct) { var NewTarget = _getPrototypeOf(this).constructor; result = Reflect.construct(Super, arguments, NewTarget); } else { result = Super.apply(this, arguments); } return _possibleConstructorReturn(this, result); }; }
-
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
-
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-
-function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
-
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-
-var heroConfig = {
-  color: _colorConfig.themeColors.hero,
-  radius: 0.5
-};
-
-var Hero = /*#__PURE__*/function (_MazeObject) {
-  _inherits(Hero, _MazeObject);
+var Hero = /*#__PURE__*/function (_Geometry) {
+  _inherits(Hero, _Geometry);
 
   var _super = _createSuper(Hero);
 
-  function Hero(scene, row, col) {
+  function Hero(scene) {
     var _this;
 
     _classCallCheck(this, Hero);
 
-    _this = _super.call(this, scene, row, col);
-    _this.location = {
-      row: row,
-      col: col
-    };
+    _this = _super.call(this, scene);
+    _this.scene = scene;
     return _this;
-  }
+  } // {
+  //   heroSelection: #
+  //   {
+  //     location: x / y
+  //   } 
+  //   geoConfig
+  // }
+
 
   _createClass(Hero, [{
     key: "renderObject",
-    value: function renderObject() {
-      var hero = (0, _threeGeometryCreator["default"])('hero', heroConfig);
-      hero.position.x = this.location.col;
-      hero.position.y = 0.6;
-      hero.position.z = this.location.row;
+    value: function renderObject(heroConfig) {
+      /** gc the old objs */
+      this.destroyObject();
+      /** create new */
+
+      var location = heroConfig.location,
+          geoConfig = heroConfig.geoConfig;
+      console.log(location, geoConfig);
+      var heroGeo = (0, _threeGeometryCreator["default"])('hero', geoConfig);
+      var material = (0, _threeUtilsCreator.materialCreator)('color', _colorConfig.themeColors.hero);
+      var hero = (0, _threeBasicsCreator.meshCreator)(heroGeo, material);
+      hero.position.x = location.x;
+      hero.position.y = location.y;
+      hero.position.z = location.z;
       this.scene.add(hero);
       this.hero = hero;
+    }
+  }, {
+    key: "destroyObject",
+    value: function destroyObject() {
+      this.scene.remove(this.hero);
+      delete this.hero;
+      this.hero = null;
+    }
+  }, {
+    key: "rotateObject",
+    value: function rotateObject(time) {
+      this.hero.rotation.y = time;
     }
   }, {
     key: "getLocation",
@@ -52472,12 +52549,12 @@ var Hero = /*#__PURE__*/function (_MazeObject) {
   }]);
 
   return Hero;
-}(_mazeObject["default"]);
+}(_geometry["default"]);
 
 var _default = Hero;
 exports["default"] = _default;
 
-},{"../../../utils/threeGeometryCreator":18,"../../consts/colorConfig":10,"./mazeObject":14}],14:[function(require,module,exports){
+},{"../utils/geometry":17,"../utils/threeBasicsCreator":18,"../utils/threeGeometryCreator":19,"../utils/threeUtilsCreator":20,"./consts/colorConfig":11,"./consts/heroConfig":12}],15:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52487,21 +52564,25 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var Three = _interopRequireWildcard(require("three"));
+var _colorConfig = require("../consts/colorConfig");
 
-var _geometry = _interopRequireDefault(require("../geometry"));
+var _threeUtilsCreator = require("../../utils/threeUtilsCreator");
+
+var _threeBasicsCreator = require("../../utils/threeBasicsCreator");
+
+var _threeGeometryCreator = _interopRequireDefault(require("../../utils/threeGeometryCreator"));
+
+var _blockConfig = _interopRequireDefault(require("../consts/blockConfig"));
+
+var _geometry = _interopRequireDefault(require("../../utils/geometry"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
 
@@ -52517,28 +52598,207 @@ function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Re
 
 function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
 
-var MazeObject = /*#__PURE__*/function (_Geometry) {
-  _inherits(MazeObject, _Geometry);
+var Block = /*#__PURE__*/function (_Geometry) {
+  _inherits(Block, _Geometry);
 
-  var _super = _createSuper(MazeObject);
+  var _super = _createSuper(Block);
 
-  function MazeObject(scene) {
+  function Block(scene, row, col) {
     var _this;
 
-    _classCallCheck(this, MazeObject);
+    _classCallCheck(this, Block);
 
-    _this = _super.call(this);
-    _this.scene = scene;
+    _this = _super.call(this, scene, row, col);
+    _this.scene = scene; // this.walls.up = neighbour.up;
+    // this.walls.down = neighbour.down;
+    // this.walls.left = neighbour.left;
+    // this.walls.right = neighbour.right;
+
+    _this.location = {
+      row: row,
+      col: col
+    };
     return _this;
   }
 
-  return _createClass(MazeObject);
+  _createClass(Block, [{
+    key: "renderObject",
+    value: function renderObject() {
+      var blockGeo = (0, _threeGeometryCreator["default"])('block', _blockConfig["default"]);
+      var blockMaterial = (0, _threeUtilsCreator.materialCreator)('color', _colorConfig.themeColors.getBlockColor());
+      var block = (0, _threeBasicsCreator.meshCreator)(blockGeo, blockMaterial);
+      block.position.x = this.location.col;
+      block.position.z = this.location.row;
+      this.scene.add(block);
+    }
+  }, {
+    key: "renderWalls",
+    value: function renderWalls(neighbour) {
+      var scene = this.scene;
+      var walls = {};
+      walls.up = neighbour.up;
+      walls.down = neighbour.down;
+      walls.left = neighbour.left;
+      walls.right = neighbour.right;
+      if (walls.up) _renderWall(1, 1, 0.1, this.location.row - 0.5, 0.5, this.location.col);
+      if (walls.down) _renderWall(1, 1, 0.1, this.location.row + 0.5, 0.5, this.location.col);
+      if (walls.left) _renderWall(0.1, 1, 1, this.location.row, 0.5, this.location.col - 0.5);
+      if (walls.right) _renderWall(0.1, 1, 1, this.location.row, 0.5, this.location.col + 0.5);
+
+      function _renderWall(width, height, depth, x, y, z) {
+        var wallGeo = (0, _threeGeometryCreator["default"])('block', {
+          width: width,
+          height: height,
+          depth: depth
+        });
+        var wallMaterial = (0, _threeUtilsCreator.materialCreator)('texture', _colorConfig.themeTexture.wall);
+        var wall = (0, _threeBasicsCreator.meshCreator)(wallGeo, wallMaterial);
+        wall.position.x = z;
+        wall.position.y = y;
+        wall.position.z = x;
+        scene.add(wall);
+      }
+
+      this.walls = walls;
+    }
+  }, {
+    key: "checkMove",
+    value: function checkMove(direction) {
+      switch (direction) {
+        case 'up':
+          return this.walls[0] === null;
+
+        case 'down':
+          return this.walls[1] === null;
+
+        case 'left':
+          return this.walls[2] === null;
+
+        case 'right':
+          return this.walls[3] === null;
+
+        default:
+          break;
+      }
+    }
+  }]);
+
+  return Block;
 }(_geometry["default"]);
 
-var _default = MazeObject;
+var _default = Block;
 exports["default"] = _default;
 
-},{"../geometry":15,"three":8}],15:[function(require,module,exports){
+},{"../../utils/geometry":17,"../../utils/threeBasicsCreator":18,"../../utils/threeGeometryCreator":19,"../../utils/threeUtilsCreator":20,"../consts/blockConfig":9,"../consts/colorConfig":11}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _mazeGeneration = _interopRequireDefault(require("maze-generation"));
+
+var _block = _interopRequireDefault(require("./block"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+
+var Maze = /*#__PURE__*/function () {
+  function Maze(scene, dim) {
+    _classCallCheck(this, Maze);
+
+    if (typeof dim === 'undefined') {
+      console.error("Invalid Maze Parameter");
+      return;
+    }
+
+    this.dim = dim;
+    this.scene = scene;
+    this.blockData = [];
+
+    for (var i = 0; i < dim; i++) {
+      var temp = [];
+
+      for (var j = 0; j < dim; j++) {
+        temp.push(new _block["default"](scene, i, j));
+      }
+
+      this.blockData.push(temp);
+    }
+  }
+
+  _createClass(Maze, [{
+    key: "generateMaze",
+    value: function generateMaze() {
+      var _this = this;
+
+      var mazeRawData = (0, _mazeGeneration["default"])({
+        width: this.dim,
+        height: this.dim,
+        seed: Math.random() * 1000
+      });
+      this.iterateBlock(function (i, j) {
+        _this.blockData[i][j].renderWalls(mazeRawData.toJSON().rows[i][j]);
+      });
+    }
+  }, {
+    key: "renderObject",
+    value: function renderObject() {
+      var _this2 = this;
+
+      this.iterateBlock(function (i, j) {
+        _this2.blockData[i][j].renderObject();
+      });
+    }
+  }, {
+    key: "renderWalls",
+    value: function renderWalls() {
+      var _this3 = this;
+
+      this.iterateBlock(function (i, j) {
+        _this3.blockData[i][j].renderWalls();
+      });
+    }
+  }, {
+    key: "iterateBlock",
+    value: function iterateBlock(cb) {
+      for (var i = 0; i < this.dim; i++) {
+        for (var j = 0; j < this.dim; j++) {
+          cb(i, j);
+        }
+      }
+    }
+  }, {
+    key: "checkMove",
+    value: function checkMove(direction, location) {
+      var row = location.row,
+          col = location.col;
+      return this.blockData[row][col].checkMove(direction);
+    }
+  }, {
+    key: "destory",
+    value: function destory() {
+      var _this4 = this;
+
+      this.iterateBlock(function (i, j) {
+        delete _this4.blockData[i][j];
+      });
+    }
+  }]);
+
+  return Maze;
+}();
+
+var _default = Maze;
+exports["default"] = _default;
+
+},{"./block":15,"maze-generation":2}],17:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52575,6 +52835,16 @@ var Geometry = /*#__PURE__*/function () {
     value: function renderObject() {
       throw new Error('Method Not Implemented');
     }
+  }, {
+    key: "rotateObject",
+    value: function rotateObject() {
+      throw new Error('Method Not Implemented');
+    }
+  }, {
+    key: "destroyObject",
+    value: function destroyObject() {
+      throw new Error('Method Not Implemented');
+    }
   }]);
 
   return Geometry;
@@ -52582,112 +52852,7 @@ var Geometry = /*#__PURE__*/function () {
 
 exports["default"] = Geometry;
 
-},{}],16:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports["default"] = void 0;
-
-var _mazeGeneration = _interopRequireDefault(require("maze-generation"));
-
-var _block = _interopRequireDefault(require("./Block/block"));
-
-var _hero = _interopRequireDefault(require("./MazeObject/hero"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-
-var Maze = /*#__PURE__*/function () {
-  function Maze(scene, dim) {
-    _classCallCheck(this, Maze);
-
-    console.log(scene);
-
-    if (typeof dim === 'undefined') {
-      console.error("Invalid Maze Parameter");
-      return;
-    }
-
-    this.dim = dim;
-    this.scene = scene;
-    this.hero = new _hero["default"](scene, 10, 10);
-    var mazeRawData = (0, _mazeGeneration["default"])({
-      width: dim,
-      height: dim,
-      seed: Math.random() * 1000
-    });
-    console.log(mazeRawData.toString());
-    this.blockData = [];
-
-    for (var i = 0; i < dim; i++) {
-      var temp = [];
-
-      for (var j = 0; j < dim; j++) {
-        temp.push(new _block["default"](scene, mazeRawData.toJSON().rows[i][j], i, j));
-      }
-
-      this.blockData.push(temp);
-    }
-  }
-
-  _createClass(Maze, [{
-    key: "renderMaze",
-    value: function renderMaze(isNoWall) {
-      var _this = this;
-
-      this.iterateBlock(function (i, j) {
-        _this.blockData[i][j].renderObject(isNoWall);
-      });
-      this.hero.renderObject();
-    }
-  }, {
-    key: "iterateBlock",
-    value: function iterateBlock(cb) {
-      for (var i = 0; i < this.dim; i++) {
-        for (var j = 0; j < this.dim; j++) {
-          cb(i, j);
-        }
-      }
-    }
-  }, {
-    key: "moveHero",
-    value: function moveHero(direction) {
-      var _this$hero$getLocatio = this.hero.getLocation(),
-          row = _this$hero$getLocatio.row,
-          col = _this$hero$getLocatio.col;
-
-      console.log("col: ", row, col, direction);
-
-      if (this.blockData[row][col].checkMove(direction)) {
-        console.log("valid");
-        this.hero.move(direction);
-      }
-    }
-  }, {
-    key: "destory",
-    value: function destory() {
-      var _this2 = this;
-
-      this.iterateBlock(function (i, j) {
-        delete _this2.blockData[i][j];
-      });
-    }
-  }]);
-
-  return Maze;
-}();
-
-var _default = Maze;
-exports["default"] = _default;
-
-},{"./Block/block":12,"./MazeObject/hero":13,"maze-generation":2}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52695,9 +52860,13 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.sceneCreator = exports.resizeRendererToDisplaySize = exports.rendererCreator = exports.cameraCreator = void 0;
+exports.sceneCreator = exports.rendererCreator = exports.orbitControlCreator = exports.meshCreator = exports.cameraCreator = void 0;
 
 var Three = _interopRequireWildcard(require("three"));
+
+var _threeOrbitcontrols = _interopRequireDefault(require("three-orbitcontrols"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
@@ -52743,24 +52912,27 @@ var sceneCreator = function sceneCreator() {
 
 exports.sceneCreator = sceneCreator;
 
-var resizeRendererToDisplaySize = function resizeRendererToDisplaySize(renderer, container) {
-  var canvas = renderer.domElement;
-  var width = container.clientWidth;
-  var height = container.clientHeight;
-  var needResize = canvas.width !== width || canvas.height !== height;
-  return needResize;
-}; // add light
-// const color = 0xFFFFFF;
-// const intensity = 1;
-// const light = new Three.DirectionalLight(color, intensity);
-// light.position.set(-1, 2, 4);
-// scene.add(light);
-// scene.background = new Three.Color(0x8fb1e9);
+var orbitControlCreator = function orbitControlCreator(camera, domElement, config) {
+  var _config$position = config.position,
+      x = _config$position.x,
+      y = _config$position.y,
+      z = _config$position.z,
+      autoRotate = config.autoRotate;
+  var control = new _threeOrbitcontrols["default"](camera, domElement);
+  control.target.set(x, y, z);
+  control.autoRotate = autoRotate;
+  return control;
+};
 
+exports.orbitControlCreator = orbitControlCreator;
 
-exports.resizeRendererToDisplaySize = resizeRendererToDisplaySize;
+var meshCreator = function meshCreator(geometry, material) {
+  return new Three.Mesh(geometry, material);
+};
 
-},{"three":8}],18:[function(require,module,exports){
+exports.meshCreator = meshCreator;
+
+},{"three":8,"three-orbitcontrols":7}],19:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52772,7 +52944,7 @@ exports["default"] = void 0;
 
 var Three = _interopRequireWildcard(require("three"));
 
-var _excluded = ["color"];
+var _excluded = ["selection"];
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
@@ -52782,7 +52954,24 @@ function _objectWithoutProperties(source, excluded) { if (source == null) return
 
 function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
-// a config includes block config or hero config
+function _construct(Parent, args, Class) { if (_isNativeReflectConstruct()) { _construct = Reflect.construct.bind(); } else { _construct = function _construct(Parent, args, Class) { var a = [null]; a.push.apply(a, args); var Constructor = Function.bind.apply(Parent, a); var instance = new Constructor(); if (Class) _setPrototypeOf(instance, Class.prototype); return instance; }; } return _construct.apply(null, arguments); }
+
+function _isNativeReflectConstruct() { if (typeof Reflect === "undefined" || !Reflect.construct) return false; if (Reflect.construct.sham) return false; if (typeof Proxy === "function") return true; try { Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); return true; } catch (e) { return false; } }
+
+function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 var geometryCreator = function geometryCreator(kind, config) {
   switch (kind) {
     case 'block':
@@ -52791,39 +52980,92 @@ var geometryCreator = function geometryCreator(kind, config) {
     case 'hero':
       return heroCreator(config);
 
+    case 'text':
+      return textCreator(config);
+
     default:
       break;
   }
-};
+}; // const textCreator = async (config) => {
+//   const height = 5,
+// 				size = 80,
+// 				curveSegments = 4,
+// 				bevelThickness = 2,
+// 				bevelSize = 1.5;
+//   let text;
+//   let centerOffset;
+//   const loader = new FontLoader();
+//   loader.load('src/assets/fonts/helvetiker_regular.typeface.json', function(font) {
+//     text = createText(font);
+//     text.computeBoundingBox();
+//     centerOffset = - 0.5 * ( text.boundingBox.max.x - text.boundingBox.min.x );
+//     let material = [
+//       new Three.MeshPhongMaterial( { color: 0x000000, flatShading: true } ), // front
+//       new Three.MeshPhongMaterial( { color: 0x000000 } ) // side
+//     ];
+//     let geo =  new Three.Mesh(text, material);
+//     geo.position.x = centerOffset;
+//     return geo;
+//   })
+//   const createText = font => {
+//     return new TextGeometry("Maze Runner", {
+//       font: font,
+//       size: size,
+//       height: height,
+//       curveSegments: curveSegments,
+//       bevelThickness: bevelThickness,
+//       bevelSize: bevelSize,
+//       bevelEnabled: true,
+//       bevelSize: 8,
+//       bevelOffset: 0,
+//       bevelSegments: 5
+//     })
+//   }
+// }
+
 
 var blockCreator = function blockCreator(config) {
-  var color = config.color,
-      boxConfig = _objectWithoutProperties(config, _excluded);
+  config = Object.values(config);
 
-  var boxWidth = boxConfig.boxWidth,
-      boxHeight = boxConfig.boxHeight,
-      boxDepth = boxConfig.boxDepth;
-  var box = new Three.BoxGeometry(boxWidth, boxHeight, boxDepth);
-  var material = new Three.MeshPhongMaterial({
-    color: color
-  });
-  return new Three.Mesh(box, material);
+  var box = _construct(Three.BoxGeometry, _toConsumableArray(config));
+
+  return box;
 };
 
 var heroCreator = function heroCreator(config) {
-  var color = config.color,
-      radius = config.radius;
-  var oct = new Three.OctahedronGeometry(radius);
-  var material = new Three.MeshPhongMaterial({
-    color: color
-  });
-  return new Three.Mesh(oct, material);
+  console.log(config);
+  var oct;
+
+  var selection = config.selection,
+      heroConfig = _objectWithoutProperties(config, _excluded);
+
+  heroConfig = Object.values(heroConfig);
+
+  switch (selection) {
+    case 'cyclinder':
+      oct = _construct(Three.CylinderGeometry, _toConsumableArray(heroConfig));
+      break;
+
+    case 'cone':
+      oct = _construct(Three.ConeGeometry, _toConsumableArray(heroConfig));
+      break;
+
+    case 'octa':
+      oct = _construct(Three.OctahedronGeometry, _toConsumableArray(heroConfig));
+      break;
+
+    case 'sphere':
+      oct = _construct(Three.SphereGeometry, _toConsumableArray(heroConfig));
+      break;
+  }
+
+  return oct;
 };
 
 var _default = geometryCreator;
 exports["default"] = _default;
 
-},{"three":8}],19:[function(require,module,exports){
+},{"three":8}],20:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52831,13 +53073,39 @@ function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" =
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.lightCreator = exports.colorCreator = void 0;
+exports.materialCreator = exports.lightCreator = exports.colorCreator = void 0;
 
 var Three = _interopRequireWildcard(require("three"));
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+var materialCreator = function materialCreator(kind, value) {
+  var material;
+
+  switch (kind) {
+    case 'color':
+      material = new Three.MeshPhongMaterial({
+        color: value
+      });
+      break;
+
+    case 'texture':
+      var loader = new Three.TextureLoader();
+      material = new Three.MeshPhongMaterial({
+        map: loader.load(value)
+      });
+      break;
+
+    default:
+      break;
+  }
+
+  return material;
+};
+
+exports.materialCreator = materialCreator;
 
 var colorCreator = function colorCreator(color) {
   return new Three.Color(color);

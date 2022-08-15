@@ -5,14 +5,23 @@ const mainCameraConfig = {
   far: 100,
   position: {
     x: 10,
-    y: 15,
+    y: 10,
     z: 25
   },
   rotation: {
-    x: -0.75,
+    x: -0.5,
     y: 0,
     z: 0
   }
+}
+
+const orbitControlConfig = {
+  position: {
+    x: 10,
+    y: 4,
+    z: 10
+  },
+  autoRotate: true
 }
 
 // const mainCameraConfig = {
@@ -34,5 +43,6 @@ const mainCameraConfig = {
 
 
 export {
-  mainCameraConfig
+  mainCameraConfig,
+  orbitControlConfig
 }

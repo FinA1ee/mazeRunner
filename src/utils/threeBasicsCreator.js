@@ -1,4 +1,5 @@
 import * as Three from 'three';
+import OrbitControls from 'three-orbitcontrols';
 
 const rendererCreator = () => {
   let renderer = new Three.WebGLRenderer();
@@ -29,21 +30,18 @@ const sceneCreator = () => {
   return new Three.Scene();
 }
 
-const resizeRendererToDisplaySize = (renderer, container) => {
-  const canvas = renderer.domElement;
-  const width = container.clientWidth;
-  const height = container.clientHeight;
-  const needResize = canvas.width !== width || canvas.height !== height;
-  return needResize;
+const orbitControlCreator = (camera, domElement, config) => {
+  const { position: {x, y, z}, autoRotate } = config;
+
+  let control = new OrbitControls(camera, domElement);
+  control.target.set( x, y, z );
+  control.autoRotate = autoRotate;
+
+  return control;
 }
 
-    // add light
-    // const color = 0xFFFFFF;
-    // const intensity = 1;
-    // const light = new Three.DirectionalLight(color, intensity);
-    // light.position.set(-1, 2, 4);
-    // scene.add(light);
-    // scene.background = new Three.Color(0x8fb1e9);
+const meshCreator = (geometry, material) => {
+  return new Three.Mesh(geometry, material);
+}
 
-
-export { rendererCreator, cameraCreator, sceneCreator, resizeRendererToDisplaySize};
+export { rendererCreator, cameraCreator, sceneCreator, orbitControlCreator, meshCreator};

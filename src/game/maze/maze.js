@@ -1,42 +1,49 @@
 import mazeGeneration from "maze-generation";
-import Block from "./Block/block";
-import Hero from "./MazeObject/hero";
+import Block from "./block";
 
 class Maze {
 
   constructor(scene, dim) {
-    console.log(scene);
     if (typeof dim === 'undefined') {
       console.error("Invalid Maze Parameter");
       return;
     }
     this.dim = dim;
     this.scene = scene;
-    this.hero = new Hero(scene, 10, 10);
-
-    const mazeRawData = mazeGeneration({
-      width: dim,
-      height: dim,
-      seed: Math.random() * 1000
-    });
-
-    console.log(mazeRawData.toString());
+    
     this.blockData = [];
     for (let i = 0; i < dim; i++) {
       let temp = [];
       for (let j = 0; j < dim; j++) {
-        temp.push(new Block(scene, mazeRawData.toJSON().rows[i][j], i, j));
+        temp.push(new Block(scene, i, j));
       }
       this.blockData.push(temp);
     }
 
   }
 
-  renderMaze(isNoWall) {
+  generateMaze() {
+    const mazeRawData = mazeGeneration({
+      width: this.dim,
+      height: this.dim,
+      seed: Math.random() * 1000
+    });
+
     this.iterateBlock((i, j) => {
-      this.blockData[i][j].renderObject(isNoWall);
+      this.blockData[i][j].renderWalls(mazeRawData.toJSON().rows[i][j]);
     })
-    this.hero.renderObject();
+  }
+
+  renderObject() {
+    this.iterateBlock((i, j) => {
+      this.blockData[i][j].renderObject();
+    })
+  }
+
+  renderWalls() {
+    this.iterateBlock((i, j) => {
+      this.blockData[i][j].renderWalls();
+    })
   }
 
   iterateBlock(cb) {
@@ -47,13 +54,9 @@ class Maze {
     }
   }
 
-  moveHero(direction) {
-    const { row, col } = this.hero.getLocation();
-    console.log("col: ", row, col, direction);
-    if (this.blockData[row][col].checkMove(direction)) {
-      console.log("valid");
-      this.hero.move(direction);
-    }
+  checkMove(direction, location) {
+    const { row, col } = location;
+    return this.blockData[row][col].checkMove(direction);
   }
 
   destory() {
