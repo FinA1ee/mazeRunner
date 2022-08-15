@@ -32,6 +32,10 @@ class Monster extends Geometry {
     this.mon.rotation.y = time;
     this.mon.rotation.z = time;
   }
+
+  destroyObject() {
+    this.scene.remove(this.mon);
+  }
 }
 
 export default Monster;

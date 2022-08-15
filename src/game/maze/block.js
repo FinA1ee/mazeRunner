@@ -73,6 +73,24 @@ class Block extends Geometry {
     this.walls = walls;
   }
 
+  tryMoveHero(hero) {
+    if (!this.objOnBlock) return;
+
+    if (this.objOnBlock instanceof Coin) {
+      hero.collectCoin();
+      this.objOnBlock.destroyObject();
+      delete this.objOnBlock;
+      this.objOnBlock = null;
+    }
+
+    if (this.objOnBlock instanceof Monster) {
+      hero.encounterMonster();
+      this.objOnBlock.destroyObject();
+      delete this.objOnBlock;
+      this.objOnBlock = null;
+    }
+  }
+
   checkMove(direction) {
     return !this.walls[direction];
   }

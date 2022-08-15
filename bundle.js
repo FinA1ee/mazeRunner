@@ -52161,7 +52161,8 @@ exports["default"] = void 0;
 var getHeroConfig = function getHeroConfig(selection, gameStatus) {
   return {
     location: getHeroInitalLocation(gameStatus),
-    geoConfig: getHeroGeoConfig(selection, gameStatus)
+    geoConfig: getHeroGeoConfig(selection, gameStatus),
+    hp: 5
   };
 }; // 1
 
@@ -52254,8 +52255,6 @@ exports["default"] = void 0;
 
 var _threeBasicsCreator = require("../utils/threeBasicsCreator");
 
-var _threeGeometryCreator = _interopRequireDefault(require("../utils/threeGeometryCreator"));
-
 var _threeUtilsCreator = require("../utils/threeUtilsCreator");
 
 var _cameraConfigs = require("./consts/cameraConfigs");
@@ -52266,15 +52265,11 @@ var Three = _interopRequireWildcard(require("three"));
 
 var _maze = _interopRequireDefault(require("./maze/maze"));
 
-var _hero = _interopRequireDefault(require("./hero"));
-
-var _heroConfig = _interopRequireDefault(require("./consts/heroConfig"));
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
 
 function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -52314,21 +52309,16 @@ var Game = /*#__PURE__*/function () {
     /** 创建迷宫实例 */
 
     this.maze = new _maze["default"](this.scene, this.dim);
-    /** 创建英雄实例 */
-
-    this.heroSelection = 1;
-    this.hero = new _hero["default"](this.scene, (0, _heroConfig["default"])(this.heroSelection, Game.status)); // let text = textCreator('text');
-    // text.position.x = 0;
-
     var height = 2,
         size = 3;
     var textGeo;
     var loader = new Three.FontLoader();
-    loader.load('src/assets/fonts/helvetiker_regular.typeface.json', function (font) {
+    loader.load('src/assets/fonts/helvetiker_bold.typeface.json', function (font) {
       var text = new Three.TextGeometry("Maze Runner", {
         font: font,
         size: size,
-        height: height
+        height: height,
+        bevelThickness: 5
       });
       text.computeBoundingBox();
       var centerOffset = -0.5 * (text.boundingBox.max.x - text.boundingBox.min.x);
@@ -52357,9 +52347,8 @@ var Game = /*#__PURE__*/function () {
     value: function changeHero(direction) {
       if (Game.status === 'Hero Selection') {
         if (direction) this.heroSelection = this.heroSelection + 1 === 5 ? 1 : this.heroSelection + 1;else this.heroSelection = this.heroSelection - 1 === 0 ? 4 : this.heroSelection - 1;
-      }
+      } // this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
 
-      this.hero.generateObject((0, _heroConfig["default"])(this.heroSelection, Game.status));
     }
   }, {
     key: "render",
@@ -52369,7 +52358,6 @@ var Game = /*#__PURE__*/function () {
       var container = this.container;
       var camera = this.mainCamera;
       var scene = this.scene;
-      var hero = this.hero;
       var maze = this.maze;
       var control = this.orbitControl;
 
@@ -52388,10 +52376,13 @@ var Game = /*#__PURE__*/function () {
           renderer.setSize(container.clientWidth, container.clientHeight, false);
           camera.aspect = canvas.clientWidth / canvas.clientHeight;
           camera.updateProjectionMatrix();
-        }
+        } // camera.position.x = 0.5;
+        // camera.position.y = 0.5;
+        // camera.position.z = 0.5;
+        // camera.updateProjectionMatrix();
+
 
         control.update();
-        if (Game.status === 'Hero Selection') hero.renderObject(time);
         maze.renderObject(time);
         renderer.setPixelRatio(window.devicePixelRatio);
         renderer.render(scene, camera);
@@ -52404,23 +52395,23 @@ var Game = /*#__PURE__*/function () {
     key: "moveHero",
     value: function moveHero(direction) {
       if (Game.status !== 'Game Begin') return;
-      var validMove = this.maze.checkMove(direction, this.hero.getLocation());
-      if (validMove) this.hero.move(direction);
+      var validMove = this.maze.moveHero(direction); // validMove && this.maze.isGameEnd() && this.gameOver();
+    }
+  }, {
+    key: "gameOver",
+    value: function gameOver() {
+      console.log("Game End");
     }
   }, {
     key: "initGame",
     value: function initGame() {
-      Game.status = 'Game Begin'; // maze generate the wall data
-      // maze generate the hero data
-      // render
-      // if (this.maze) {
+      Game.status = 'Game Begin'; // if (this.maze) {
       //   this.maze.destory();
       //   this.scene.remove.apply(this.scene, this.scene.children);
       // }
       // this.scene.remove.apply(this.scene, this.scene.children);
 
-      this.maze.genMaze();
-      this.hero.generateObject((0, _heroConfig["default"])(this.heroSelection, Game.status));
+      this.maze.initMaze();
     }
   }, {
     key: "switchCamera",
@@ -52455,7 +52446,7 @@ _defineProperty(Game, "getInstance", function () {
 var _default = Game;
 exports["default"] = _default;
 
-},{"../utils/threeBasicsCreator":21,"../utils/threeGeometryCreator":22,"../utils/threeUtilsCreator":23,"./consts/cameraConfigs":10,"./consts/colorConfig":11,"./consts/heroConfig":12,"./hero":14,"./maze/maze":17,"three":8}],14:[function(require,module,exports){
+},{"../utils/threeBasicsCreator":21,"../utils/threeUtilsCreator":23,"./consts/cameraConfigs":10,"./consts/colorConfig":11,"./maze/maze":17,"three":8}],14:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52511,18 +52502,12 @@ var Hero = /*#__PURE__*/function (_Geometry) {
 
     _this = _super.call(this, scene);
     _this.scene = scene;
+    _this.coins = 0;
 
     _this.generateObject(heroConfig);
 
     return _this;
-  } // {
-  //   heroSelection: #
-  //   {
-  //     location: x / y
-  //   } 
-  //   geoConfig
-  // }
-
+  }
 
   _createClass(Hero, [{
     key: "generateObject",
@@ -52532,13 +52517,15 @@ var Hero = /*#__PURE__*/function (_Geometry) {
       /** create new */
 
       var location = heroConfig.location,
-          geoConfig = heroConfig.geoConfig;
+          geoConfig = heroConfig.geoConfig,
+          hp = heroConfig.hp;
       var heroGeo = (0, _threeGeometryCreator["default"])('hero', geoConfig);
       var material = (0, _threeUtilsCreator.materialCreator)('texture', _colorConfig.themeTexture.hero);
       var hero = (0, _threeBasicsCreator.meshCreator)(heroGeo, material);
       hero.position.x = location.x;
       hero.position.y = location.y;
       hero.position.z = location.z;
+      this.hp = hp;
       this.hero = hero;
       this.scene.add(hero);
     }
@@ -52561,6 +52548,26 @@ var Hero = /*#__PURE__*/function (_Geometry) {
         row: this.hero.position.z,
         col: this.hero.position.x
       };
+    }
+  }, {
+    key: "collectHp",
+    value: function collectHp() {
+      this.hp++;
+    }
+  }, {
+    key: "collectCoin",
+    value: function collectCoin() {
+      this.coins++;
+    }
+  }, {
+    key: "encounterMonster",
+    value: function encounterMonster() {
+      this.hp--;
+    }
+  }, {
+    key: "dead",
+    value: function dead() {
+      return this.hp <= 0;
     }
   }, {
     key: "move",
@@ -52732,6 +52739,25 @@ var Block = /*#__PURE__*/function (_Geometry) {
       this.walls = walls;
     }
   }, {
+    key: "tryMoveHero",
+    value: function tryMoveHero(hero) {
+      if (!this.objOnBlock) return;
+
+      if (this.objOnBlock instanceof _coin["default"]) {
+        hero.collectCoin();
+        this.objOnBlock.destroyObject();
+        delete this.objOnBlock;
+        this.objOnBlock = null;
+      }
+
+      if (this.objOnBlock instanceof _monster["default"]) {
+        hero.encounterMonster();
+        this.objOnBlock.destroyObject();
+        delete this.objOnBlock;
+        this.objOnBlock = null;
+      }
+    }
+  }, {
     key: "checkMove",
     value: function checkMove(direction) {
       return !this.walls[direction];
@@ -52824,6 +52850,11 @@ var Coin = /*#__PURE__*/function (_Geometry) {
     value: function renderObject(time) {
       this.coin.rotation.y = time;
     }
+  }, {
+    key: "destroyObject",
+    value: function destroyObject() {
+      this.scene.remove(this.coin);
+    }
   }]);
 
   return Coin;
@@ -52842,6 +52873,10 @@ exports["default"] = void 0;
 
 var _mazeGeneration = _interopRequireDefault(require("maze-generation"));
 
+var _heroConfig = _interopRequireDefault(require("../consts/heroConfig"));
+
+var _hero = _interopRequireDefault(require("../hero"));
+
 var _block = _interopRequireDefault(require("./block"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
@@ -52853,7 +52888,7 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 
 var Maze = /*#__PURE__*/function () {
-  function Maze(scene, dim) {
+  function Maze(scene, dim, mazeConfig) {
     _classCallCheck(this, Maze);
 
     if (typeof dim === 'undefined') {
@@ -52862,32 +52897,40 @@ var Maze = /*#__PURE__*/function () {
     }
 
     this.dim = dim;
-    this.coinsCount = dim;
-    this.monsterCount = dim / 2;
+    this.coinsCount = dim / 2;
+    this.monsterCount = dim / 4;
+    this.gameStatus = 'Hero Selection';
+    this.hero = new _hero["default"](scene, (0, _heroConfig["default"])(1, this.gameStatus));
     this.scene = scene;
-    this.blockData = [];
 
-    for (var i = 0; i < dim; i++) {
-      var temp = [];
-
-      for (var j = 0; j < dim; j++) {
-        temp.push(new _block["default"](scene, {
-          row: i,
-          col: j
-        }));
-      }
-
-      this.blockData.push(temp);
-    }
-
-    console.log(this.blockData);
+    this._genBlockData();
   }
 
   _createClass(Maze, [{
-    key: "genMaze",
-    value: function genMaze(mazeConfig) {
+    key: "_genBlockData",
+    value: function _genBlockData() {
+      this.blockData = [];
+
+      for (var i = 0; i < this.dim; i++) {
+        var temp = [];
+
+        for (var j = 0; j < this.dim; j++) {
+          var block = new _block["default"](this.scene, {
+            row: i,
+            col: j
+          });
+          temp.push(block);
+        }
+
+        this.blockData.push(temp);
+      }
+    }
+  }, {
+    key: "initMaze",
+    value: function initMaze() {
       var _this = this;
 
+      this.gameStatus = 'Game Begin';
       var coinsCount = this.coinsCount;
       var monsterCount = this.monsterCount;
       var dim = this.dim;
@@ -52922,6 +52965,7 @@ var Maze = /*#__PURE__*/function () {
         ;
       }
 
+      this.hero.generateObject((0, _heroConfig["default"])(1, this.gameStatus));
       this.iterateBlock(function (i, j) {
         _this.blockData[i][j].genWalls(mazeRawData.toJSON().rows[i][j]);
       });
@@ -52938,6 +52982,7 @@ var Maze = /*#__PURE__*/function () {
       this.iterateBlock(function (i, j) {
         _this2.blockData[i][j].renderObject(time);
       });
+      if (this.gameStatus === 'Hero Selection') this.hero.renderObject(time);
     }
   }, {
     key: "iterateBlock",
@@ -52949,12 +52994,20 @@ var Maze = /*#__PURE__*/function () {
       }
     }
   }, {
-    key: "checkMove",
-    value: function checkMove(direction, location) {
-      console.log(location);
-      var row = location.row,
-          col = location.col;
-      return this.blockData[row][col].checkMove(direction);
+    key: "moveHero",
+    value: function moveHero(direction) {
+      var _this$hero$getLocatio = this.hero.getLocation(),
+          row = _this$hero$getLocatio.row,
+          col = _this$hero$getLocatio.col;
+
+      if (this.blockData[row][col].checkMove(direction)) {
+        this.blockData[row][col].tryMoveHero(this.hero);
+        this.hero.move(direction);
+        return true;
+      }
+
+      ;
+      return false;
     }
   }, {
     key: "destory",
@@ -52973,7 +53026,7 @@ var Maze = /*#__PURE__*/function () {
 var _default = Maze;
 exports["default"] = _default;
 
-},{"./block":15,"maze-generation":2}],18:[function(require,module,exports){
+},{"../consts/heroConfig":12,"../hero":14,"./block":15,"maze-generation":2}],18:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -53054,6 +53107,11 @@ var Monster = /*#__PURE__*/function (_Geometry) {
       this.mon.rotation.x = time;
       this.mon.rotation.y = time;
       this.mon.rotation.z = time;
+    }
+  }, {
+    key: "destroyObject",
+    value: function destroyObject() {
+      this.scene.remove(this.mon);
     }
   }]);
 

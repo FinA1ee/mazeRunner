@@ -31,6 +31,10 @@ class Coin extends Geometry {
   renderObject(time) {
     this.coin.rotation.y = time;
   }
+
+  destroyObject() {
+    this.scene.remove(this.coin);
+  }
 }
 
 export default Coin;

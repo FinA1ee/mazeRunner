@@ -10,26 +10,17 @@ class Hero extends Geometry {
   constructor(scene, heroConfig) {
     super(scene);
     this.scene = scene;
-
+    this.coins = 0;
     this.generateObject(heroConfig);
   }
 
-
-
-  // {
-  //   heroSelection: #
-  //   {
-  //     location: x / y
-  //   } 
-  //   geoConfig
-  // }
   generateObject(heroConfig) {
 
     /** gc the old objs */
     this.destroyObject();
 
     /** create new */
-    let { location, geoConfig } = heroConfig;    
+    let { location, geoConfig, hp } = heroConfig;
     let heroGeo = geometryCreator('hero', geoConfig);
     let material = materialCreator('texture', themeTexture.hero);
     let hero = meshCreator(heroGeo, material);
@@ -38,6 +29,7 @@ class Hero extends Geometry {
     hero.position.y = location.y;
     hero.position.z = location.z;
 
+    this.hp = hp;
     this.hero = hero;
     this.scene.add(hero);
   }
@@ -57,6 +49,22 @@ class Hero extends Geometry {
       row: this.hero.position.z,
       col: this.hero.position.x
     }
+  }
+
+  collectHp() {
+    this.hp++;
+  }
+
+  collectCoin() {
+    this.coins++;
+  }
+
+  encounterMonster() {
+    this.hp--;
+  }
+
+  dead() {
+    return this.hp <= 0;
   }
 
   move(direction) {

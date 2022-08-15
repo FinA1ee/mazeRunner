@@ -1,7 +1,8 @@
 const getHeroConfig = (selection, gameStatus) => {
   return {
     location: getHeroInitalLocation(gameStatus),
-    geoConfig: getHeroGeoConfig(selection, gameStatus)
+    geoConfig: getHeroGeoConfig(selection, gameStatus),
+    hp: 5
   }
 }
 

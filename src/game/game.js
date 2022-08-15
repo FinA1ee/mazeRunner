@@ -1,12 +1,9 @@
 import { cameraCreator, orbitControlCreator, rendererCreator, sceneCreator } from '../utils/threeBasicsCreator';
-import geometryCreator from '../utils/threeGeometryCreator';
 import { colorCreator, lightCreator } from '../utils/threeUtilsCreator';
 import { mainCameraConfig, orbitControlConfig } from './consts/cameraConfigs';
 import { themeColors } from './consts/colorConfig';
 import * as Three from 'three';
 import Maze from './maze/maze';
-import Hero from './hero';
-import getHeroConfig from './consts/heroConfig';
 
 
 class Game {
@@ -45,22 +42,17 @@ class Game {
     /** 创建迷宫实例 */
     this.maze = new Maze(this.scene, this.dim);
 
-    /** 创建英雄实例 */
-    this.heroSelection = 1;
-    this.hero = new Hero(this.scene, getHeroConfig(this.heroSelection, Game.status));
-    
-    // let text = textCreator('text');
-    // text.position.x = 0;
 
     const height = 2, size = 3;
 
     let textGeo;
     const loader = new Three.FontLoader();
-    loader.load('src/assets/fonts/helvetiker_regular.typeface.json', function(font) {
+    loader.load('src/assets/fonts/helvetiker_bold.typeface.json', function(font) {
       let text = new Three.TextGeometry("Maze Runner", {
         font: font,
         size: size,
-        height: height
+        height: height,
+        bevelThickness: 5
       });
       text.computeBoundingBox();
       let centerOffset = - 0.5 * ( text.boundingBox.max.x - text.boundingBox.min.x );
@@ -87,7 +79,7 @@ class Game {
       if (direction) this.heroSelection = this.heroSelection + 1 === 5 ? 1 : this.heroSelection + 1;
       else this.heroSelection = this.heroSelection - 1 === 0 ? 4 : this.heroSelection - 1;
     }
-    this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
+    // this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
   }
 
   render() {
@@ -96,7 +88,6 @@ class Game {
     const container = this.container;
     const camera = this.mainCamera;
     const scene = this.scene;
-    const hero = this.hero;
     const maze = this.maze;
     const control = this.orbitControl;
 
@@ -116,9 +107,13 @@ class Game {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
       }
+
+      // camera.position.x = 0.5;
+      // camera.position.y = 0.5;
+      // camera.position.z = 0.5;
+      // camera.updateProjectionMatrix();
       control.update();
 
-      if (Game.status === 'Hero Selection') hero.renderObject(time);
       maze.renderObject(time);
       
       renderer.setPixelRatio(window.devicePixelRatio);
@@ -131,28 +126,25 @@ class Game {
 
   moveHero(direction) {
     if (Game.status !== 'Game Begin') return;
-    let validMove = this.maze.checkMove(direction, this.hero.getLocation());
-    if (validMove) this.hero.move(direction);
+    let validMove = this.maze.moveHero(direction);
+    // validMove && this.maze.isGameEnd() && this.gameOver();
+  }
+
+  gameOver() {
+    console.log("Game End");
   }
 
   initGame() {
 
     Game.status = 'Game Begin';
-
-    // maze generate the wall data
-
-    // maze generate the hero data
-
-    // render
-
     // if (this.maze) {
     //   this.maze.destory();
     //   this.scene.remove.apply(this.scene, this.scene.children);
     // }
     
     // this.scene.remove.apply(this.scene, this.scene.children);
-    this.maze.genMaze();
-    this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
+    this.maze.initMaze();
+  
   }
 
   switchCamera(id) {
