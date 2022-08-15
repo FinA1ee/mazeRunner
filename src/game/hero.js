@@ -1,15 +1,17 @@
 import geometryCreator from '../utils/threeGeometryCreator';
 import Geometry from '../utils/geometry';
-import { themeColors } from './consts/colorConfig';
+import { themeColors, themeTexture } from './consts/colorConfig';
 import getHeroConfig from './consts/heroConfig';
 import { materialCreator } from '../utils/threeUtilsCreator';
 import { meshCreator } from '../utils/threeBasicsCreator';
 
 class Hero extends Geometry {
   
-  constructor(scene) {
+  constructor(scene, heroConfig) {
     super(scene);
     this.scene = scene;
+
+    this.generateObject(heroConfig);
   }
 
 
@@ -21,24 +23,23 @@ class Hero extends Geometry {
   //   } 
   //   geoConfig
   // }
-  renderObject(heroConfig) {
+  generateObject(heroConfig) {
 
     /** gc the old objs */
     this.destroyObject();
 
     /** create new */
-    let { location, geoConfig } = heroConfig;
-    console.log(location, geoConfig);
+    let { location, geoConfig } = heroConfig;    
     let heroGeo = geometryCreator('hero', geoConfig);
-    let material = materialCreator('color', themeColors.hero);
+    let material = materialCreator('texture', themeTexture.hero);
     let hero = meshCreator(heroGeo, material);
 
     hero.position.x = location.x;
     hero.position.y = location.y;
     hero.position.z = location.z;
 
-    this.scene.add(hero);
     this.hero = hero;
+    this.scene.add(hero);
   }
 
   destroyObject() {
@@ -47,36 +48,34 @@ class Hero extends Geometry {
     this.hero = null;
   }
 
-
-  rotateObject(time) {
+  renderObject(time) {
     this.hero.rotation.y = time;
   }
 
-
-  getLocation() {
-    return this.location;
+  getLocation() { 
+    return {
+      row: this.hero.position.z,
+      col: this.hero.position.x
+    }
   }
 
   move(direction) {
     switch(direction) {
       case 'up': 
         this.hero.position.z--;
-        this.location.row--;
         break;
       case 'down': 
         this.hero.position.z++;
-        this.location.row++;
         break;
       case 'left': 
         this.hero.position.x--;
-        this.location.col--;
         break;
       case 'right': 
         this.hero.position.x++;
-        this.location.col++;
         break;
       default: break;
     }
+    console.log(this.hero.position);
   }
 }
 

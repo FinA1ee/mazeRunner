@@ -10,7 +10,9 @@ window.onload = () => {
   const container = document.getElementById("container");
   const panel = document.getElementById("panel");
   new Draggable(panel, onDrag);
+
   const gameStartBtn = document.getElementById("start");
+  const cameraTwo = document.getElementById("cameraTwo");
 
   if (container) {
     game = Game.getInstance({
@@ -20,13 +22,20 @@ window.onload = () => {
 
     window.addEventListener('keydown', handleHeroSelection);
     window.addEventListener('keydown', handleGameStartInput);
+    window.addEventListener('keydown', handleHeroMoveInput);
   }
 
   if (gameStartBtn) {
     gameStartBtn.addEventListener('click', handleGameStart);
   }
 
+  if (cameraTwo) {
+    cameraTwo.addEventListener('click', () => handleCameraSwitch(2));
+  }
+}
 
+const handleCameraSwitch = (id) => {
+  game && game.switchCamera(id);
 }
 
 const handleGameStart = (e) => {
@@ -58,7 +67,3 @@ const handleHeroSelection = (e) => {
     game && game.changeHero(true);
   }
 }
-
-
-
-// window.addEventListener('keydown', handleHeroMoveInput);

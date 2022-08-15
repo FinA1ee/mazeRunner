@@ -27,8 +27,8 @@ class Game {
 
     /** 创建摄像头 */
     this.mainCamera = cameraCreator(mainCameraConfig);
-    // this.orbitControl = orbitControlCreator(this.mainCamera, this.renderer.domElement, orbitControlConfig);
-    // this.orbitControl.update();
+    this.orbitControl = orbitControlCreator(this.mainCamera, this.renderer.domElement, orbitControlConfig);
+    this.orbitControl.update();
 
     /** 创建灯光 */
     this.light = lightCreator(themeColors.light, 1);
@@ -44,12 +44,10 @@ class Game {
 
     /** 创建迷宫实例 */
     this.maze = new Maze(this.scene, this.dim);
-    this.maze.renderObject();
 
     /** 创建英雄实例 */
     this.heroSelection = 1;
-    this.hero = new Hero(this.scene);
-    this.hero.renderObject(getHeroConfig(this.heroSelection, Game.status));
+    this.hero = new Hero(this.scene, getHeroConfig(this.heroSelection, Game.status));
     
     // let text = textCreator('text');
     // text.position.x = 0;
@@ -80,7 +78,7 @@ class Game {
 
     /** 开始渲染 */
     this.render();
-    console.log(this.scene);
+
     Game.status = 'Hero Selection';
   }
 
@@ -89,7 +87,7 @@ class Game {
       if (direction) this.heroSelection = this.heroSelection + 1 === 5 ? 1 : this.heroSelection + 1;
       else this.heroSelection = this.heroSelection - 1 === 0 ? 4 : this.heroSelection - 1;
     }
-    this.hero.renderObject(getHeroConfig(this.heroSelection, Game.status));
+    this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
   }
 
   render() {
@@ -99,6 +97,7 @@ class Game {
     const camera = this.mainCamera;
     const scene = this.scene;
     const hero = this.hero;
+    const maze = this.maze;
     const control = this.orbitControl;
 
 
@@ -117,10 +116,11 @@ class Game {
         camera.aspect = canvas.clientWidth / canvas.clientHeight;
         camera.updateProjectionMatrix();
       }
-      // control.update();
+      control.update();
 
-      if (Game.status === 'Hero Selection') hero.rotateObject(time);
-
+      if (Game.status === 'Hero Selection') hero.renderObject(time);
+      maze.renderObject(time);
+      
       renderer.setPixelRatio(window.devicePixelRatio);
       renderer.render(scene, camera);
       requestAnimationFrame(animate);
@@ -130,6 +130,7 @@ class Game {
 
 
   moveHero(direction) {
+    if (Game.status !== 'Game Begin') return;
     let validMove = this.maze.checkMove(direction, this.hero.getLocation());
     if (validMove) this.hero.move(direction);
   }
@@ -150,8 +151,16 @@ class Game {
     // }
     
     // this.scene.remove.apply(this.scene, this.scene.children);
-    this.maze.generateMaze();
-    this.hero.renderObject(getHeroConfig(this.heroSelection, Game.status));
+    this.maze.genMaze();
+    this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
+  }
+
+  switchCamera(id) {
+    if (id === 2) {
+      this.mainCamera.rotation.x = 0.5;
+      this.orbitControl.update();
+      console.log("called");
+    }
   }
 
   restart() {

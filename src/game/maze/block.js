@@ -2,75 +2,79 @@ import { themeColors, themeTexture } from '../consts/colorConfig';
 import { materialCreator } from '../../utils/threeUtilsCreator';
 import { meshCreator } from '../../utils/threeBasicsCreator';
 import geometryCreator from '../../utils/threeGeometryCreator';
-import blockConfig from '../consts/blockConfig';
+import { blockConfig } from '../consts/blockConfig';
 import Geometry from '../../utils/geometry';
+import Wall from './wall';
+import Coin from './coin';
+import Monster from './monster';
 
 class Block extends Geometry {
 
-  constructor(scene,row, col) {
-    super(scene, row, col);
+  constructor(scene, location) {
+    super(scene, location);
 
+    this.objOnBlock = null;
     this.scene = scene;
-    // this.walls.up = neighbour.up;
-    // this.walls.down = neighbour.down;
-    // this.walls.left = neighbour.left;
-    // this.walls.right = neighbour.right;
+    this.location = location;
 
-    this.location = {
-      row, col
-    }
+    this.generateObject();
   }
 
-  renderObject() {
-
+  generateObject() {
     let blockGeo = geometryCreator('block', blockConfig);
-    let blockMaterial = materialCreator('color', themeColors.getBlockColor());
+    let blockMaterial = materialCreator('texture', themeTexture.floor);
     let block = meshCreator(blockGeo, blockMaterial);
 
     block.position.x = this.location.col;
     block.position.z = this.location.row;
 
+    this.block = block;
     this.scene.add(block);
   }
 
+  renderObject(time) {
+    // const objs = Object.values(this.walls);
+    // console.log(objs);
+    // Object.values(this.walls).forEach((obj) => obj.renderObject(time));
+    this.objOnBlock && this.objOnBlock.renderObject(time);
+  }
 
-  renderWalls(neighbour) {
-
-    let scene = this.scene;
-    let walls = {};
-    walls.up = neighbour.up;
-    walls.down = neighbour.down;
-    walls.left = neighbour.left;
-    walls.right = neighbour.right;
-
-    if (walls.up) _renderWall(1, 1, 0.1, this.location.row - 0.5, 0.5, this.location.col);
-    if (walls.down) _renderWall(1, 1, 0.1, this.location.row + 0.5, 0.5, this.location.col);
-    if (walls.left) _renderWall(0.1, 1, 1, this.location.row, 0.5, this.location.col - 0.5);
-    if (walls.right) _renderWall(0.1, 1, 1, this.location.row, 0.5, this.location.col + 0.5);
-
-    function _renderWall(width, height, depth, x, y, z) {
-      let wallGeo = geometryCreator('block', { width, height, depth });
-      let wallMaterial = materialCreator('texture', themeTexture.wall);
-      let wall = meshCreator(wallGeo, wallMaterial);
-  
-      wall.position.x = z;
-      wall.position.y = y;
-      wall.position.z = x;
-      scene.add(wall);
+  genObject(kind) {
+    if (this.objOnBlock) return false;
+    
+    switch(kind) {
+      case 'coin':
+        this.objOnBlock = new Coin(this.scene, this.location, 0.5);
+        break;
+      case 'monster':
+        this.objOnBlock = new Monster(this.scene, this.location, 0.5);
+        break;
+      default: 
+        break;         
     }
 
+    return true;
+  }
+
+  genWalls(neighbour) {
+    let walls = {};
+    let scene = this.scene;
+    let location = this.location;
+
+    function _genWall(width, height, depth, x, y, z) {
+      let wall = new Wall(scene, location, { width, height, depth }, { x: z, y: y, z: x });
+      return wall;
+    }
+    
+    if (neighbour.up) walls.up = _genWall(1, 1, 0.1, this.location.row - 0.5, 0.5, this.location.col);
+    if (neighbour.down) walls.down = _genWall(1, 1, 0.1, this.location.row + 0.5, 0.5, this.location.col);
+    if (neighbour.left) walls.left = _genWall(0.1, 1, 1, this.location.row, 0.5, this.location.col - 0.5);
+    if (neighbour.right) walls.right = _genWall(0.1, 1, 1, this.location.row, 0.5, this.location.col + 0.5);
     this.walls = walls;
   }
 
-
   checkMove(direction) {
-    switch(direction) {
-      case 'up': return this.walls[0] === null;
-      case 'down': return this.walls[1] === null;
-      case 'left': return this.walls[2] === null;
-      case 'right': return this.walls[3] === null;
-      default: break;
-    }
+    return !this.walls[direction];
   }
 }
 

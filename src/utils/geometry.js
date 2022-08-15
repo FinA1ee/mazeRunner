@@ -16,8 +16,12 @@ export default class Geometry {
   //   throw new Error('Method Not Implemented');
   // }
 
-  renderObject() {
+  generateObject() {
     throw new Error('Method Not Implemented');
+  }
+
+  renderObject() {
+    
   }
 
   rotateObject() {

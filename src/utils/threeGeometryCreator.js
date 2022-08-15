@@ -5,10 +5,16 @@ const geometryCreator = (kind, config) => {
   switch (kind) {
     case 'block':
       return blockCreator(config);
+    case 'wall':
+      return blockCreator(config);
     case 'hero':
       return heroCreator(config);
     case 'text':
       return textCreator(config);
+    case 'coin':
+      return coinCreator(config);
+    case 'monster':
+      return monsterCreator(config);
     default: break;
   }
 }
@@ -61,7 +67,6 @@ const blockCreator = (config) => {
 }
 
 const heroCreator = (config) => {
-  console.log(config);
   let oct;
   let { selection, ...heroConfig } = config;
   heroConfig = Object.values(heroConfig);
@@ -81,6 +86,18 @@ const heroCreator = (config) => {
       break;
   }
   return oct;
+}
+
+const coinCreator = (config) => {
+  config = Object.values(config);
+  let coin = new Three.TorusGeometry(...config);
+  return coin;
+}
+
+const monsterCreator = (config) => {
+  config = Object.values(config);
+  let monster = new Three.TorusKnotGeometry(...config);
+  return monster;
 }
 
 

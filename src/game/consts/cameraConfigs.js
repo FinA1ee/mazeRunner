@@ -21,7 +21,7 @@ const orbitControlConfig = {
     y: 4,
     z: 10
   },
-  autoRotate: true
+  // autoRotate: true
 }
 
 // const mainCameraConfig = {

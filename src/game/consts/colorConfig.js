@@ -1,3 +1,5 @@
+const texturePath = 'src/assets/textures/';
+
 const themeColors = {
   background: 0x000000,
   wall: 0x8fb1e9,
@@ -9,7 +11,11 @@ const themeColors = {
 }
 
 const themeTexture = {
-  wall: 'src/assets/textures/wall.jpeg'
+  wall: `${texturePath}wall.jpeg`,
+  hero: `${texturePath}hero.jpeg`,
+  floor: `${texturePath}floor.jpeg`,
+  coin: `${texturePath}coin.jpeg`,
+  monster: `${texturePath}monster.jpeg`
 }
 
 export {
