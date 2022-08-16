@@ -1,6 +1,6 @@
 const blockConfig = {
   boxWidth: 1,
-  boxHeight: 0.1,
+  boxHeight: 0.01,
   boxDepth: 1
 }
 

@@ -16,7 +16,7 @@ class Wall extends Geometry {
   generateObject(wallConfig, position) {
 
     let wallGeo = geometryCreator("wall", wallConfig);
-    let wallMaterial = materialCreator("texture", themeTexture.wall);
+    let wallMaterial = materialCreator("color", 0x66ccff);
     let wall = meshCreator(wallGeo, wallMaterial);
 
     wall.position.x = position.x;

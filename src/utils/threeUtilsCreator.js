@@ -22,8 +22,8 @@ const colorCreator = (color) => {
   return new Three.Color(color);
 }
 
-const lightCreator = (color, intensity) => {
-  return new Three.HemisphereLight(0xffffbb, 0x080820, 1);
+const lightCreator = (colorConfig, intensity) => {
+  return new Three.HemisphereLight(0xffffff, 0x080820, 1);
 }
 
 const fontLoaderCreator = () => {

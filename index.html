@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Maze Runner</title>
 
   <style>
     html, body {
@@ -13,11 +13,28 @@
     }
     #panel {
       position: absolute;
+      background-color: gray;
+      margin-top: 50px;
+      margin-left: 50px;
     }
     #container {
        width: 100%;
        height: 100%;
        display: block;
+    }
+    .hero_img {
+      width: 20px;
+      height: 20px;
+    }
+    .content {
+      display: none;
+      padding: 10px 20px;
+    }
+    .content.active {
+      display: block;
+    }
+    .radio {
+      /* display: block; */
     }
   </style>
 
@@ -25,20 +42,80 @@
 <body>
 
   <div id="panel">
-    <button id="start">Start Game</button>
-    <div id="cameraGroup">
+    <!-- <div id="cameraGroup">
       <button id="cameraOne">Main Camera</button>
       <button id="cameraTwo">Upper Camera</button>
       <button id="cameraThree">Hero Camera</button>
+    </div> -->
+    <!-- <div id="fps"></div> -->
+
+    <div id="gameControl">
+      <label>Game Settings</label>
+
+      <div class="buttonWrapper">
+        <button class="tab-button active" style="border-top-left-radius: 10px;" data-id="maze">Maze</button>
+        <button class="tab-button" data-id="hero">Hero</button>
+        <button class="tab-button" style="border-top-right-radius: 10px;" data-id="wall">Wall</button>
+      </div>
+
+      <!-- <section id="difficulty">
+        <input id="difficulty_entry" type="range" min="10" max="50" step="5" value="5"></input>
+        <label>Difficulty</label>          
+      </section> -->
+
+      <div class="content active" id="maze_setting">
+        <legend>Maze Difficulty</legend>
+        <div id="maze_difficulty">
+          <input class="radio" id="maze_easy" type="radio" value="easy" name="difficulty" checked>
+          <label for="maze_easy">Easy</label>
+
+          <input class="radio" id="maze_medium" type="radio" value="medium" name="difficulty">
+          <label for="maze_medium">Medium</label>
+
+          <input class="radio" id="maze_hard" type="radio" value="hard" name="difficulty">
+          <label for="maze_hard">Hard</label>
+        </div>
+
+        
+        <legend>Maze Apperance</legend>
+        <div id="maze_apperance">
+          <input class="radio" id="maze_theme1" type="radio" value="stone" name="appearance">
+          <label for="maze_theme1">Stone</label>
+
+          <input class="radio" id="maze_theme2" type="radio" value="blood" name="appearance">
+          <label for="maze_theme2">Bloody</label>
+
+          <input class="radio" id="maze_theme3" type="radio" value="star" name="appearance">
+          <label for="maze_theme3">Star</label>
+        </div>
+        
+      </div>
+
+      <div class="content" id="hero_setting">
+        <section id="hero_shape">
+          <label>Hero Shape</label>
+          <div id="hero_shape_1"></div>
+          <div id="hero_shape_2"></div>
+          <div id="hero_shape_3"></div>
+        </section>
+
+        <section class="hero_apperance">
+          <label>Hero Apperance</label>
+          <img class="hero_img" id="hero_apperance_1" src="src/assets/textures/hero/blood.jpeg"></img>
+          <img class="hero_img" id="hero_apperance_2" src="src/assets/textures/hero/steel.jpeg"></img>
+          <img class="hero_img" id="hero_apperance_3" src="src/assets/textures/hero/diamond.jpeg"></img>
+        </section>
+      </div>
+
     </div>
-    <div id="fps"></div>
+
+
+    <button id="start">Start Game</button>
   </div>
   
 
-  <div id="container">
-  </div>
+  <div id="container"></div>
   <script type="module" src="bundle.js"></script>
-  <script src="node_modules/draggable/src/draggable.js"></script>
 </body>
 </html>
 

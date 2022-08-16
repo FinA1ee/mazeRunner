@@ -8,13 +8,14 @@ import Wall from './wall';
 import Coin from './coin';
 import Monster from './monster';
 
-class Block extends Geometry {
+class Floor extends Geometry {
 
-  constructor(scene, location) {
+  constructor(scene, location, texture) {
     super(scene, location);
 
     this.objOnBlock = null;
     this.scene = scene;
+    this.texture = texture;
     this.location = location;
 
     this.generateObject();
@@ -22,7 +23,8 @@ class Block extends Geometry {
 
   generateObject() {
     let blockGeo = geometryCreator('block', blockConfig);
-    let blockMaterial = materialCreator('texture', themeTexture.floor);
+
+    let blockMaterial = materialCreator('color', 0xffffff);
     let block = meshCreator(blockGeo, blockMaterial);
 
     block.position.x = this.location.col;
@@ -94,6 +96,21 @@ class Block extends Geometry {
   checkMove(direction) {
     return !this.walls[direction];
   }
+
+  destroyObject() {
+    if (this.objOnBlock) {
+      this.objOnBlock.destroyObject();
+    }
+
+    if (this.walls) {
+      this.walls.up?.destroyObject();
+      this.walls.down?.destroyObject();
+      this.walls.left?.destroyObject();
+      this.walls.right?.destroyObject();
+    }
+
+    this.scene.remove(this.block);
+  }
 }
 
-export default Block;
+export default Floor;

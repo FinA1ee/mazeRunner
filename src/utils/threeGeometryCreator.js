@@ -3,9 +3,9 @@ import * as Three from 'three';
 const geometryCreator = (kind, config) => {
   switch (kind) {
     case 'block':
-      return blockCreator(config);
+      return boxCreator(config);
     case 'wall':
-      return blockCreator(config);
+      return boxCreator(config);
     case 'hero':
       return heroCreator(config);
     case 'text':
@@ -24,7 +24,7 @@ const textCreator = (textConfig) => {
   return text;
 }
 
-const blockCreator = (config) => {
+const boxCreator = (config) => {
   config = Object.values(config);
   let box = new Three.BoxGeometry(...config);
   return box;

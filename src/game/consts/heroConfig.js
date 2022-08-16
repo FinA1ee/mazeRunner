@@ -1,6 +1,6 @@
-const getHeroConfig = (selection, gameStatus) => {
+const getHeroConfig = (dim, selection, gameStatus) => {
   return {
-    location: getHeroInitalLocation(gameStatus),
+    location: getHeroInitalLocation(dim, gameStatus),
     geoConfig: getHeroGeoConfig(selection, gameStatus),
     hp: 5
   }
@@ -10,7 +10,7 @@ const getHeroConfig = (selection, gameStatus) => {
 const octahedronHero = (gameStatus) => {
   return {
     selection: 'octa',
-    radius: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
+    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
   }
 }
 
@@ -18,9 +18,9 @@ const octahedronHero = (gameStatus) => {
 const cylinderHero = (gameStatus) => {
   return {
     selection: 'cyclinder',
-    radiusTop: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
-    radiusBottom: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
-    height: gameStatus === 'Hero Selection' ? 2 : 1,
+    radiusTop: gameStatus === 'Prepare' ? 1.5 : 0.5,
+    radiusBottom: gameStatus === 'Prepare' ? 1.5 : 0.5,
+    height: gameStatus === 'Prepare' ? 2 : 1,
     radialSegments: 6
   }
 }
@@ -30,7 +30,7 @@ const cylinderHero = (gameStatus) => {
 const coneHero = (gameStatus) => {
   return {
     selection: 'cone',
-    radius: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
+    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
     height: 2,
     radialSegment: 8
   }
@@ -41,7 +41,7 @@ const coneHero = (gameStatus) => {
 const sphereHero = (gameStatus) => {
   return {
     selection: 'sphere',
-    radius: gameStatus === 'Hero Selection' ? 1.5 : 0.5,
+    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
     widthSegment: 20,
     heightSegments: 20
   }
@@ -58,12 +58,12 @@ const getHeroGeoConfig = (selection, gameStatus) => {
   }
 }
 
-const getHeroInitalLocation = (gameStatus) => {
-  if (gameStatus === 'Hero Selection') {
+const getHeroInitalLocation = (dim, gameStatus) => {
+  if (gameStatus === 'Prepare') {
     return {
-      x: 9,
+      x: (dim - 1) / 2,
       y: 2,
-      z: 9,
+      z: (dim - 1) / 2,
     }
   } else {
     return {

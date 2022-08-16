@@ -5,19 +5,20 @@ import { themeColors } from './consts/colorConfig';
 import Maze from './maze/maze';
 import textConfig from './consts/textConfig';
 import TextContent from './maze/text';
+import getMazeConfig from './consts/mazeConfig';
 
 
 class Game {
 
-  static status = 'Hero Selection' || 'Game Begin' || 'Game End';
+  static status = 'Prepare' || 'Game Begin' || 'Game End';
 
   static instance = null;
 
   constructor(options) {
 
-    const { container, dim } = options;
+    const { container } = options;
 
-    this.dim = dim;
+    // this.dim = dim;
     this.container = container;
     
     /** 创建渲染器 */
@@ -40,21 +41,27 @@ class Game {
     /** 加入外部容器 */
     container.appendChild(this.renderer.domElement);
 
-    /** 创建迷宫实例 */
-    this.maze = new Maze(this.scene, this.dim);
+    /** 创建默认迷宫实例 */
+    this.maze = new Maze(this.scene, getMazeConfig({}));
 
     /** 创建标题实例 */
     this.title = new TextContent(this.scene, 'Maze Runner', {x: 0, y: 10, z: 0}, textConfig.titleConfig);
-    console.log("title: ", textConfig.titleConfig);
 
     /** 开始渲染 */
     this.render();
 
-    Game.status = 'Hero Selection';
+    Game.status = 'Prepare';
+  }
+
+  changeMazeSetting(setting) {
+    if (Game.status === 'Prepare') {
+      console.log("setting ",setting);
+      this.maze.initMaze(getMazeConfig(setting));
+    }
   }
 
   changeHero(direction) {
-    if (Game.status === 'Hero Selection') {
+    if (Game.status === 'Prepare') {
       if (direction) this.heroSelection = this.heroSelection + 1 === 5 ? 1 : this.heroSelection + 1;
       else this.heroSelection = this.heroSelection - 1 === 0 ? 4 : this.heroSelection - 1;
     }
@@ -122,7 +129,7 @@ class Game {
     // }
     
     // this.scene.remove.apply(this.scene, this.scene.children);
-    this.maze.initMaze();
+    this.maze.initGame();
   
   }
 

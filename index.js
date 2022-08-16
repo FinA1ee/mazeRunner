@@ -1,37 +1,37 @@
 import Game from "./src/game/game";
 
-function onDrag(element, x, y) {
-  
-}
-
 let game;
+
+let mazeSettings = {
+  difficulty: null,
+  appearance: null
+}
 
 window.onload = () => {
   const container = document.getElementById("container");
   const panel = document.getElementById("panel");
-  new Draggable(panel, onDrag);
+
+
+  const mazeDifficulty = document.getElementById('maze_difficulty');
+  const mazeApperance = document.getElementById('maze_apperance');
+
 
   const gameStartBtn = document.getElementById("start");
-  const cameraTwo = document.getElementById("cameraTwo");
+  // const cameraTwo = document.getElementById("cameraTwo");
 
   if (container) {
-    game = Game.getInstance({
-      container,
-      dim: 19
-    });
+    game = Game.getInstance({ container });
 
     window.addEventListener('keydown', handleHeroSelection);
     window.addEventListener('keydown', handleGameStartInput);
     window.addEventListener('keydown', handleHeroMoveInput);
   }
 
-  if (gameStartBtn) {
-    gameStartBtn.addEventListener('click', handleGameStart);
-  }
 
-  if (cameraTwo) {
-    cameraTwo.addEventListener('click', () => handleCameraSwitch(2));
-  }
+  if (gameStartBtn) gameStartBtn.addEventListener('click', handleGameStart);
+
+  if (mazeDifficulty) mazeDifficulty.addEventListener('change', handleMazeDifficultySelection);
+  if (mazeApperance) mazeApperance.addEventListener('change', handleMazeApperanceSelection);
 }
 
 const handleCameraSwitch = (id) => {
@@ -40,6 +40,20 @@ const handleCameraSwitch = (id) => {
 
 const handleGameStart = (e) => {
   game && game.initGame();
+}
+
+const handleMazeDifficultySelection = (e) => {
+  if (e.target && e.target.nodeName.toUpperCase() == "INPUT") {
+    mazeSettings.difficulty = e.target.value;
+    game && game.changeMazeSetting(mazeSettings);
+  }
+}
+
+const handleMazeApperanceSelection = (e) => {
+  if (e.target && e.target.nodeName.toUpperCase() == "INPUT") {
+    mazeSettings.appearance = e.target.value;
+    game && game.changeMazeSetting(mazeSettings);
+  }
 }
 
 const handleHeroMoveInput = (e) => {

@@ -21,7 +21,6 @@ class TextContent extends Geometry {
     let _this = this;
     let textGeo, material, text;
     let loader = fontLoaderCreator();
-    console.log("configss: ", detailConfig);
 
     loader.load(fontPath, function(font) {
       console.log(font);
