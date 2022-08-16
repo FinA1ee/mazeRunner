@@ -2,8 +2,9 @@ import { cameraCreator, orbitControlCreator, rendererCreator, sceneCreator } fro
 import { colorCreator, lightCreator } from '../utils/threeUtilsCreator';
 import { mainCameraConfig, orbitControlConfig } from './consts/cameraConfigs';
 import { themeColors } from './consts/colorConfig';
-import * as Three from 'three';
 import Maze from './maze/maze';
+import textConfig from './consts/textConfig';
+import TextContent from './maze/text';
 
 
 class Game {
@@ -42,31 +43,9 @@ class Game {
     /** 创建迷宫实例 */
     this.maze = new Maze(this.scene, this.dim);
 
-
-    const height = 2, size = 3;
-
-    let textGeo;
-    const loader = new Three.FontLoader();
-    loader.load('src/assets/fonts/helvetiker_bold.typeface.json', function(font) {
-      let text = new Three.TextGeometry("Maze Runner", {
-        font: font,
-        size: size,
-        height: height,
-        bevelThickness: 5
-      });
-      text.computeBoundingBox();
-      let centerOffset = - 0.5 * ( text.boundingBox.max.x - text.boundingBox.min.x );
-  
-      let material = [
-        new Three.MeshPhongMaterial( { color: 0xffffff, flatShading: true } ), // front
-        new Three.MeshPhongMaterial( { color: 0xffffff } ) // side
-      ];
-      textGeo = new Three.Mesh(text, material);
-      textGeo.position.x = 10 + centerOffset;
-      textGeo.position.y = 10;
-      textGeo.position.z = 0;
-      scene.add(textGeo);
-    })
+    /** 创建标题实例 */
+    this.title = new TextContent(this.scene, 'Maze Runner', {x: 0, y: 10, z: 0}, textConfig.titleConfig);
+    console.log("title: ", textConfig.titleConfig);
 
     /** 开始渲染 */
     this.render();
@@ -91,7 +70,6 @@ class Game {
     const maze = this.maze;
     const control = this.orbitControl;
 
-
     function resizeRendererToDisplaySize(renderer, container){
       const canvas = renderer.domElement;
       const width = container.clientWidth;
@@ -100,6 +78,7 @@ class Game {
       return needResize;
     }
 
+    let lastLoop = Date.now();
     function animate(time) {
       time *= 0.001;  // convert time to seconds
       if (resizeRendererToDisplaySize(renderer, container)) {
@@ -108,10 +87,10 @@ class Game {
         camera.updateProjectionMatrix();
       }
 
-      // camera.position.x = 0.5;
-      // camera.position.y = 0.5;
-      // camera.position.z = 0.5;
-      // camera.updateProjectionMatrix();
+      let thisLoop = Date.now();
+      let fps = 1000 / (thisLoop - lastLoop);
+      lastLoop = thisLoop;
+
       control.update();
 
       maze.renderObject(time);

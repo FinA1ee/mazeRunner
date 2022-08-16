@@ -1,4 +1,4 @@
-import Geometry from "../../utils/geometry";
+import Geometry from "./geometry";
 import geometryCreator from "../../utils/threeGeometryCreator";
 import { meshCreator } from "../../utils/threeBasicsCreator";
 import { materialCreator } from "../../utils/threeUtilsCreator";

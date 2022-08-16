@@ -1,5 +1,5 @@
 import geometryCreator from '../utils/threeGeometryCreator';
-import Geometry from '../utils/geometry';
+import Geometry from './maze/geometry';
 import { themeColors, themeTexture } from './consts/colorConfig';
 import getHeroConfig from './consts/heroConfig';
 import { materialCreator } from '../utils/threeUtilsCreator';
@@ -22,7 +22,7 @@ class Hero extends Geometry {
     /** create new */
     let { location, geoConfig, hp } = heroConfig;
     let heroGeo = geometryCreator('hero', geoConfig);
-    let material = materialCreator('texture', themeTexture.hero);
+    let material = materialCreator('color', themeColors.hero);
     let hero = meshCreator(heroGeo, material);
 
     hero.position.x = location.x;
@@ -83,7 +83,6 @@ class Hero extends Geometry {
         break;
       default: break;
     }
-    console.log(this.hero.position);
   }
 }
 

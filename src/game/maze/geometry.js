@@ -8,25 +8,14 @@ export default class Geometry {
     }
   }
 
-  // applyPosition() {
-  //   throw new Error('Method Not Implemented');
-  // }
-
-  // applyMaterial() {
-  //   throw new Error('Method Not Implemented');
-  // }
-
   generateObject() {
     throw new Error('Method Not Implemented');
   }
 
   renderObject() {
-    
-  }
-
-  rotateObject() {
     throw new Error('Method Not Implemented');
   }
+
 
   destroyObject() {
     throw new Error('Method Not Implemented');

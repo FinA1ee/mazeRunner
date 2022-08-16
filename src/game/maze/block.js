@@ -3,7 +3,7 @@ import { materialCreator } from '../../utils/threeUtilsCreator';
 import { meshCreator } from '../../utils/threeBasicsCreator';
 import geometryCreator from '../../utils/threeGeometryCreator';
 import { blockConfig } from '../consts/blockConfig';
-import Geometry from '../../utils/geometry';
+import Geometry from './geometry';
 import Wall from './wall';
 import Coin from './coin';
 import Monster from './monster';
