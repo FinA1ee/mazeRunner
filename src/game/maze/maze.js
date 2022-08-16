@@ -3,37 +3,38 @@ import { meshCreator } from "../../utils/threeBasicsCreator";
 import geometryCreator from "../../utils/threeGeometryCreator";
 import { materialCreator } from "../../utils/threeUtilsCreator";
 import getHeroConfig from "../consts/heroConfig";
+import getMazeConfig from "../consts/mazeConfig";
 import Hero from "../hero";
 import Floor from "./floor";
 
 class Maze {
 
   constructor(scene, mazeConfig) {
-
-    // this.mazeConfig = mazeConfig;
-
-    
-    // this.coinsCount = dim / 2;
-    // this.monsterCount = dim / 4;
-
-    // this.gameStatus = 'Prepare';
-
-
-
-    // this.hero = new Hero(scene, getHeroConfig(1, this.gameStatus));
     this.hero = null;
     this.cover = null;
     this.scene = scene;
     this.initMaze(mazeConfig);
   }
 
-  initMaze(mazeConfig) {
-    console.log(mazeConfig);
-    const { dim, floorTexture } = mazeConfig;
+  initHero(heroConfig) {
+    console.log("heroconfig: ", heroConfig);
+    let scene = this.scene;
+    let dim = this.dim;
+    function _genHero() {
+      let hero = new Hero(scene, getHeroConfig(dim, heroConfig || {}));
+      return hero;
+    }
+    this.hero.destroyObject();
+    this.hero = _genHero();
+  }
+
+  initMaze(mazeConfig, heroConfig) {
+    console.log("config: ", heroConfig);
+    const { dim, floorTexture } = getMazeConfig(mazeConfig);
     let scene = this.scene;
 
     function _genHero() {
-      let hero = new Hero(scene, getHeroConfig(dim, 1, 'Prepare'));
+      let hero = new Hero(scene, getHeroConfig(dim, heroConfig || {}));
       return hero;
     }
 
@@ -56,7 +57,7 @@ class Maze {
         boxHeight: 0.1,
         boxDepth: dim
       })
-      console.log("texture", floorTexture);
+
       let coverMaterial = materialCreator('texture', floorTexture)
       let cover = meshCreator(coverGeo, coverMaterial);
       cover.position.x = (dim - 1) / 2;

@@ -5,18 +5,33 @@ var _game = _interopRequireDefault(require("./src/game/game"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
+function _createForOfIteratorHelper(o, allowArrayLike) { var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"]; if (!it) { if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") { if (it) o = it; var i = 0; var F = function F() {}; return { s: F, n: function n() { if (i >= o.length) return { done: true }; return { done: false, value: o[i++] }; }, e: function e(_e) { throw _e; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var normalCompletion = true, didErr = false, err; return { s: function s() { it = it.call(o); }, n: function n() { var step = it.next(); normalCompletion = step.done; return step; }, e: function e(_e2) { didErr = true; err = _e2; }, f: function f() { try { if (!normalCompletion && it["return"] != null) it["return"](); } finally { if (didErr) throw err; } } }; }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
 var game;
 var mazeSettings = {
   difficulty: null,
   appearance: null
 };
+var heroSettings = {
+  shape: null,
+  skin: null
+};
 
 window.onload = function () {
   var container = document.getElementById("container");
   var panel = document.getElementById("panel");
+  var tabWrapper = document.getElementById('tabButtonWrapper');
+  var tabButtons = document.getElementsByClassName('tab-button');
+  var contents = document.getElementsByClassName('content');
   var mazeDifficulty = document.getElementById('maze_difficulty');
   var mazeApperance = document.getElementById('maze_apperance');
-  var gameStartBtn = document.getElementById("start"); // const cameraTwo = document.getElementById("cameraTwo");
+  var heroShape = document.getElementById('hero_shape');
+  var heroSkin = document.getElementById('hero_skin');
+  var gameStartBtn = document.getElementById("start");
 
   if (container) {
     game = _game["default"].getInstance({
@@ -27,9 +42,56 @@ window.onload = function () {
     window.addEventListener('keydown', handleHeroMoveInput);
   }
 
+  if (tabWrapper) {
+    tabWrapper.addEventListener('click', function (e) {
+      var id = e.target.dataset.id;
+      console.log("id:", id);
+
+      if (id) {
+        var _iterator = _createForOfIteratorHelper(tabButtons),
+            _step;
+
+        try {
+          for (_iterator.s(); !(_step = _iterator.n()).done;) {
+            var dom = _step.value;
+            dom.classList.remove('active');
+          }
+        } catch (err) {
+          _iterator.e(err);
+        } finally {
+          _iterator.f();
+        }
+
+        ;
+        e.target.classList.add('active');
+
+        var _iterator2 = _createForOfIteratorHelper(contents),
+            _step2;
+
+        try {
+          for (_iterator2.s(); !(_step2 = _iterator2.n()).done;) {
+            var _dom = _step2.value;
+
+            _dom.classList.remove('active');
+          }
+        } catch (err) {
+          _iterator2.e(err);
+        } finally {
+          _iterator2.f();
+        }
+
+        var ele = document.getElementById(id);
+        ele.classList.add('active');
+      }
+    });
+  }
+
+  ;
   if (gameStartBtn) gameStartBtn.addEventListener('click', handleGameStart);
   if (mazeDifficulty) mazeDifficulty.addEventListener('change', handleMazeDifficultySelection);
   if (mazeApperance) mazeApperance.addEventListener('change', handleMazeApperanceSelection);
+  if (heroShape) heroShape.addEventListener('click', handleHeroShapeChange);
+  if (heroSkin) heroSkin.addEventListener('click', handleHeroSkinChange);
 };
 
 var handleCameraSwitch = function handleCameraSwitch(id) {
@@ -43,14 +105,28 @@ var handleGameStart = function handleGameStart(e) {
 var handleMazeDifficultySelection = function handleMazeDifficultySelection(e) {
   if (e.target && e.target.nodeName.toUpperCase() == "INPUT") {
     mazeSettings.difficulty = e.target.value;
-    game && game.changeMazeSetting(mazeSettings);
+    game && game.changeMazeSetting(mazeSettings, heroSettings);
   }
 };
 
 var handleMazeApperanceSelection = function handleMazeApperanceSelection(e) {
   if (e.target && e.target.nodeName.toUpperCase() == "INPUT") {
     mazeSettings.appearance = e.target.value;
-    game && game.changeMazeSetting(mazeSettings);
+    game && game.changeMazeSetting(mazeSettings, heroSettings);
+  }
+};
+
+var handleHeroShapeChange = function handleHeroShapeChange(e) {
+  if (e.target && e.target.nodeName.toUpperCase() == "IMG") {
+    heroSettings.shape = e.target.id;
+    game && game.changeHeroSetting(heroSettings);
+  }
+};
+
+var handleHeroSkinChange = function handleHeroSkinChange(e) {
+  if (e.target && e.target.nodeName.toUpperCase() == "IMG") {
+    heroSettings.skin = e.target.id;
+    game && game.changeHeroSetting(heroSettings);
   }
 };
 
@@ -52141,7 +52217,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.themeTexture = exports.themeColors = void 0;
 var texturePath = 'src/assets/textures/';
 var themeColors = {
-  background: 0x000000,
+  background: 0x8fb1e9,
   wall: 0x8fb1e9,
   hero: 0xf6f18c,
   light: 0xffffff,
@@ -52167,11 +52243,14 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var getHeroConfig = function getHeroConfig(dim, selection, gameStatus) {
+var getHeroConfig = function getHeroConfig(dim, config) {
+  var shape = config.shape,
+      skin = config.skin;
   return {
-    location: getHeroInitalLocation(dim, gameStatus),
-    geoConfig: getHeroGeoConfig(selection, gameStatus),
-    hp: 5
+    location: getHeroInitalLocation(dim),
+    geoConfig: getHeroGeoConfig(shape),
+    skin: getHeroSkin(skin) // hp: 5
+
   };
 }; // 1
 
@@ -52179,7 +52258,7 @@ var getHeroConfig = function getHeroConfig(dim, selection, gameStatus) {
 var octahedronHero = function octahedronHero(gameStatus) {
   return {
     selection: 'octa',
-    radius: gameStatus === 'Prepare' ? 1.5 : 0.5
+    radius: gameStatus !== 'Game Begin' ? 1.5 : 0.5
   };
 }; // 2
 
@@ -52187,10 +52266,10 @@ var octahedronHero = function octahedronHero(gameStatus) {
 var cylinderHero = function cylinderHero(gameStatus) {
   return {
     selection: 'cyclinder',
-    radiusTop: gameStatus === 'Prepare' ? 1.5 : 0.5,
-    radiusBottom: gameStatus === 'Prepare' ? 1.5 : 0.5,
-    height: gameStatus === 'Prepare' ? 2 : 1,
-    radialSegments: 6
+    radiusTop: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
+    radiusBottom: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
+    height: gameStatus !== 'Game Begin' ? 4 : 1,
+    radialSegments: 20
   };
 }; // 3
 
@@ -52198,9 +52277,9 @@ var cylinderHero = function cylinderHero(gameStatus) {
 var coneHero = function coneHero(gameStatus) {
   return {
     selection: 'cone',
-    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
-    height: 2,
-    radialSegment: 8
+    radius: gameStatus !== 'Game Begin' ? 1 : 0.5,
+    height: 4,
+    radialSegment: 20
   };
 }; // 4
 
@@ -52208,24 +52287,32 @@ var coneHero = function coneHero(gameStatus) {
 var sphereHero = function sphereHero(gameStatus) {
   return {
     selection: 'sphere',
-    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
+    radius: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
     widthSegment: 20,
     heightSegments: 20
   };
 };
 
-var getHeroGeoConfig = function getHeroGeoConfig(selection, gameStatus) {
+var getHeroSkin = function getHeroSkin(choice) {
+  if (choice) return "src/assets/textures/hero/".concat(choice, ".jpeg");
+  return 'src/assets/textures/hero/blood.jpeg'; // default
+};
+
+var getHeroGeoConfig = function getHeroGeoConfig() {
+  var selection = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+  var gameStatus = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
   switch (selection) {
-    case 2:
+    case 'cylinder':
       return cylinderHero(gameStatus);
 
-    case 3:
+    case 'cone':
       return coneHero(gameStatus);
 
-    case 1:
+    case 'octa':
       return octahedronHero(gameStatus);
 
-    case 4:
+    case 'sphere':
       return sphereHero(gameStatus);
 
     default:
@@ -52234,7 +52321,7 @@ var getHeroGeoConfig = function getHeroGeoConfig(selection, gameStatus) {
 };
 
 var getHeroInitalLocation = function getHeroInitalLocation(dim, gameStatus) {
-  if (gameStatus === 'Prepare') {
+  if (gameStatus !== 'Game Begin') {
     return {
       x: (dim - 1) / 2,
       y: 2,
@@ -52261,10 +52348,10 @@ Object.defineProperty(exports, "__esModule", {
 exports["default"] = void 0;
 
 var getDim = function getDim(difficulty) {
-  if (difficulty === 'easy') return 20;
-  if (difficulty === 'medium') return 35;
-  if (difficulty === 'hard') return 50;
-  return 10; // default
+  if (difficulty === 'easy') return 15;
+  if (difficulty === 'medium') return 25;
+  if (difficulty === 'hard') return 35;
+  return 15; // default
 };
 
 var getFloorTexturePath = function getFloorTexturePath(choice) {
@@ -52273,7 +52360,6 @@ var getFloorTexturePath = function getFloorTexturePath(choice) {
 };
 
 var getMazeConfig = function getMazeConfig(mazeSettings) {
-  console.log(mazeSettings);
   var _mazeSettings$difficu = mazeSettings.difficulty,
       difficulty = _mazeSettings$difficu === void 0 ? null : _mazeSettings$difficu,
       _mazeSettings$appeara = mazeSettings.appearance,
@@ -52383,19 +52469,15 @@ var Game = /*#__PURE__*/function () {
 
   _createClass(Game, [{
     key: "changeMazeSetting",
-    value: function changeMazeSetting(setting) {
-      if (Game.status === 'Prepare') {
-        console.log("setting ", setting);
-        this.maze.initMaze((0, _mazeConfig["default"])(setting));
-      }
+    value: function changeMazeSetting(maze, hero) {
+      console.log("pass: ", hero);
+      if (Game.status === 'Prepare') this.maze.initMaze(maze, hero);
     }
   }, {
-    key: "changeHero",
-    value: function changeHero(direction) {
-      if (Game.status === 'Prepare') {
-        if (direction) this.heroSelection = this.heroSelection + 1 === 5 ? 1 : this.heroSelection + 1;else this.heroSelection = this.heroSelection - 1 === 0 ? 4 : this.heroSelection - 1;
-      } // this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
-
+    key: "changeHeroSetting",
+    value: function changeHeroSetting(setting) {
+      console.log(setting);
+      if (Game.status === 'Prepare') this.maze.initHero(setting);
     }
   }, {
     key: "render",
@@ -52566,14 +52648,14 @@ var Hero = /*#__PURE__*/function (_Geometry) {
 
       var location = heroConfig.location,
           geoConfig = heroConfig.geoConfig,
-          hp = heroConfig.hp;
+          skin = heroConfig.skin;
       var heroGeo = (0, _threeGeometryCreator["default"])('hero', geoConfig);
-      var material = (0, _threeUtilsCreator.materialCreator)('color', _colorConfig.themeColors.hero);
+      var material = (0, _threeUtilsCreator.materialCreator)('texture', skin);
       var hero = (0, _threeBasicsCreator.meshCreator)(heroGeo, material);
       hero.position.x = location.x;
       hero.position.y = location.y;
-      hero.position.z = location.z;
-      this.hp = hp;
+      hero.position.z = location.z; // this.hp = hp;
+
       this.hero = hero;
       this.scene.add(hero);
     }
@@ -52994,6 +53076,8 @@ var _threeUtilsCreator = require("../../utils/threeUtilsCreator");
 
 var _heroConfig = _interopRequireDefault(require("../consts/heroConfig"));
 
+var _mazeConfig = _interopRequireDefault(require("../consts/mazeConfig"));
+
 var _hero = _interopRequireDefault(require("../hero"));
 
 var _floor = _interopRequireDefault(require("./floor"));
@@ -53010,11 +53094,6 @@ var Maze = /*#__PURE__*/function () {
   function Maze(scene, mazeConfig) {
     _classCallCheck(this, Maze);
 
-    // this.mazeConfig = mazeConfig;
-    // this.coinsCount = dim / 2;
-    // this.monsterCount = dim / 4;
-    // this.gameStatus = 'Prepare';
-    // this.hero = new Hero(scene, getHeroConfig(1, this.gameStatus));
     this.hero = null;
     this.cover = null;
     this.scene = scene;
@@ -53022,15 +53101,33 @@ var Maze = /*#__PURE__*/function () {
   }
 
   _createClass(Maze, [{
+    key: "initHero",
+    value: function initHero(heroConfig) {
+      console.log("heroconfig: ", heroConfig);
+      var scene = this.scene;
+      var dim = this.dim;
+
+      function _genHero() {
+        var hero = new _hero["default"](scene, (0, _heroConfig["default"])(dim, heroConfig || {}));
+        return hero;
+      }
+
+      this.hero.destroyObject();
+      this.hero = _genHero();
+    }
+  }, {
     key: "initMaze",
-    value: function initMaze(mazeConfig) {
-      console.log(mazeConfig);
-      var dim = mazeConfig.dim,
-          floorTexture = mazeConfig.floorTexture;
+    value: function initMaze(mazeConfig, heroConfig) {
+      console.log("config: ", heroConfig);
+
+      var _getMazeConfig = (0, _mazeConfig["default"])(mazeConfig),
+          dim = _getMazeConfig.dim,
+          floorTexture = _getMazeConfig.floorTexture;
+
       var scene = this.scene;
 
       function _genHero() {
-        var hero = new _hero["default"](scene, (0, _heroConfig["default"])(dim, 1, 'Prepare'));
+        var hero = new _hero["default"](scene, (0, _heroConfig["default"])(dim, heroConfig || {}));
         return hero;
       }
 
@@ -53060,7 +53157,6 @@ var Maze = /*#__PURE__*/function () {
           boxHeight: 0.1,
           boxDepth: dim
         });
-        console.log("texture", floorTexture);
         var coverMaterial = (0, _threeUtilsCreator.materialCreator)('texture', floorTexture);
         var cover = (0, _threeBasicsCreator.meshCreator)(coverGeo, coverMaterial);
         cover.position.x = (dim - 1) / 2;
@@ -53192,7 +53288,7 @@ var Maze = /*#__PURE__*/function () {
 var _default = Maze;
 exports["default"] = _default;
 
-},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"../consts/heroConfig":12,"../hero":16,"./floor":18,"maze-generation":2}],21:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"../consts/heroConfig":12,"../consts/mazeConfig":13,"../hero":16,"./floor":18,"maze-generation":2}],21:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }

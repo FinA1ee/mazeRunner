@@ -20,16 +20,16 @@ class Hero extends Geometry {
     this.destroyObject();
 
     /** create new */
-    let { location, geoConfig, hp } = heroConfig;
+    let { location, geoConfig, skin } = heroConfig;
     let heroGeo = geometryCreator('hero', geoConfig);
-    let material = materialCreator('color', themeColors.hero);
+    let material = materialCreator('texture', skin);
     let hero = meshCreator(heroGeo, material);
 
     hero.position.x = location.x;
     hero.position.y = location.y;
     hero.position.z = location.z;
 
-    this.hp = hp;
+    // this.hp = hp;
     this.hero = hero;
     this.scene.add(hero);
   }

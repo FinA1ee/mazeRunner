@@ -1,8 +1,10 @@
-const getHeroConfig = (dim, selection, gameStatus) => {
+const getHeroConfig = (dim, config) => {
+  const { shape, skin } = config;
   return {
-    location: getHeroInitalLocation(dim, gameStatus),
-    geoConfig: getHeroGeoConfig(selection, gameStatus),
-    hp: 5
+    location: getHeroInitalLocation(dim),
+    geoConfig: getHeroGeoConfig(shape),
+    skin: getHeroSkin(skin)
+    // hp: 5
   }
 }
 
@@ -10,7 +12,7 @@ const getHeroConfig = (dim, selection, gameStatus) => {
 const octahedronHero = (gameStatus) => {
   return {
     selection: 'octa',
-    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
+    radius: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
   }
 }
 
@@ -18,10 +20,10 @@ const octahedronHero = (gameStatus) => {
 const cylinderHero = (gameStatus) => {
   return {
     selection: 'cyclinder',
-    radiusTop: gameStatus === 'Prepare' ? 1.5 : 0.5,
-    radiusBottom: gameStatus === 'Prepare' ? 1.5 : 0.5,
-    height: gameStatus === 'Prepare' ? 2 : 1,
-    radialSegments: 6
+    radiusTop: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
+    radiusBottom: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
+    height: gameStatus !== 'Game Begin' ? 4 : 1,
+    radialSegments: 20
   }
 }
 
@@ -30,9 +32,9 @@ const cylinderHero = (gameStatus) => {
 const coneHero = (gameStatus) => {
   return {
     selection: 'cone',
-    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
-    height: 2,
-    radialSegment: 8
+    radius: gameStatus !== 'Game Begin' ? 1 : 0.5,
+    height: 4,
+    radialSegment: 20
   }
 }
 
@@ -41,25 +43,29 @@ const coneHero = (gameStatus) => {
 const sphereHero = (gameStatus) => {
   return {
     selection: 'sphere',
-    radius: gameStatus === 'Prepare' ? 1.5 : 0.5,
+    radius: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
     widthSegment: 20,
     heightSegments: 20
   }
 }
 
+const getHeroSkin = (choice) => {
+  if (choice) return `src/assets/textures/hero/${choice}.jpeg`;
+  return 'src/assets/textures/hero/blood.jpeg'; // default
+}
 
-const getHeroGeoConfig = (selection, gameStatus) => {
+const getHeroGeoConfig = (selection = null, gameStatus = null) => {
   switch(selection) {
-    case 2: return cylinderHero(gameStatus);
-    case 3: return coneHero(gameStatus);
-    case 1: return octahedronHero(gameStatus);
-    case 4: return sphereHero(gameStatus);
+    case 'cylinder': return cylinderHero(gameStatus);
+    case 'cone': return coneHero(gameStatus);
+    case 'octa': return octahedronHero(gameStatus);
+    case 'sphere': return sphereHero(gameStatus);
     default: return octahedronHero(gameStatus);
   }
 }
 
 const getHeroInitalLocation = (dim, gameStatus) => {
-  if (gameStatus === 'Prepare') {
+  if (gameStatus !== 'Game Begin') {
     return {
       x: (dim - 1) / 2,
       y: 2,

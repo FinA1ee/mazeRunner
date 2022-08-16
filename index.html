@@ -13,14 +13,29 @@
     }
     #panel {
       position: absolute;
-      background-color: gray;
+      background-color: rgba(211, 211, 211, 0.3);
       margin-top: 50px;
       margin-left: 50px;
+      font-size: 14px;
+      font-family: monospace;
+      border-radius: 5px;
+      width: 300px;
+      box-shadow: 0px 5px 15px rgb(0 0 0 / 10%);
     }
     #container {
        width: 100%;
        height: 100%;
        display: block;
+    }
+    .content_wrapper {
+      display: flex;
+      height: 40px;
+    }
+    .content_title {
+      font-weight: 700;
+      font-size: 16px;
+      text-align: center;
+      margin-bottom: 5px;
     }
     .hero_img {
       width: 20px;
@@ -31,10 +46,58 @@
       padding: 10px 20px;
     }
     .content.active {
-      display: block;
+      display: flex;
+      height: 180px;
+      flex-direction: column;
     }
-    .radio {
+    .content_section {
+      display: flex;
+      margin-bottom: 10px;
+      justify-content: center;
+    }
+    .tab-button {
+      flex: 1;
+      letter-spacing: 3px;
+      border: none;
+      padding: 10px;
+      background-color: #000000;
+      color: #ffffff;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.5s;
+      border-color: #ffffff;
+      border-style: solid;
+    }
+
+    .tab-button.active{
+      background-color: rgba(211, 211, 211, 0.3);
+    }
+
+    .content_img {
+      height: 20px;
+      width: 20px;
+      align-self: center;
+      margin-top: 5px;
+      margin-bottom: 15px;
+    }
+
+    .content_hero_shape {
+      height: 30px;
+      width: 30px; 
+      margin-left: 20px;
+    margin-right: 20px;     
+    }
+    
+    input[type=radio] {
       /* display: block; */
+      height: 20px;
+      margin: 5px 0px 5px 0px;
+      width: 20px;
+    }
+    label {
+      margin: 5px;
+      line-height: 20px;
+      margin-right: 15px;
     }
   </style>
 
@@ -49,23 +112,25 @@
     </div> -->
     <!-- <div id="fps"></div> -->
 
-    <div id="gameControl">
-      <label>Game Settings</label>
 
-      <div class="buttonWrapper">
-        <button class="tab-button active" style="border-top-left-radius: 10px;" data-id="maze">Maze</button>
-        <button class="tab-button" data-id="hero">Hero</button>
-        <button class="tab-button" style="border-top-right-radius: 10px;" data-id="wall">Wall</button>
-      </div>
+      <!-- <label>Game Settings</label> -->
 
-      <!-- <section id="difficulty">
-        <input id="difficulty_entry" type="range" min="10" max="50" step="5" value="5"></input>
-        <label>Difficulty</label>          
-      </section> -->
+    <div class="content_wrapper" id="tabButtonWrapper">
+      <button class="tab-button active" data-id="maze_setting">Maze</button>
+      <button class="tab-button" data-id="hero_setting">Hero</button>
+      <button class="tab-button" data-id="wall_setting">Wall</button>
+    </div>
 
-      <div class="content active" id="maze_setting">
-        <legend>Maze Difficulty</legend>
-        <div id="maze_difficulty">
+    <!-- <section id="difficulty">
+      <input id="difficulty_entry" type="range" min="10" max="50" step="5" value="5"></input>
+      <label>Difficulty</label>          
+    </section> -->
+
+    <div class="content active" id="maze_setting">
+      <img class="content_img" src="src/assets/other/maze.png">
+      <div>
+        <legend class="content_title">Maze Difficulty</legend>
+        <div class="content_section" id="maze_difficulty">
           <input class="radio" id="maze_easy" type="radio" value="easy" name="difficulty" checked>
           <label for="maze_easy">Easy</label>
 
@@ -75,42 +140,51 @@
           <input class="radio" id="maze_hard" type="radio" value="hard" name="difficulty">
           <label for="maze_hard">Hard</label>
         </div>
+      </div>
 
-        
-        <legend>Maze Apperance</legend>
-        <div id="maze_apperance">
-          <input class="radio" id="maze_theme1" type="radio" value="stone" name="appearance">
-          <label for="maze_theme1">Stone</label>
+      <div>
+        <legend class='content_title'>Maze Apperance</legend>
+        <div class="content_section" id="maze_apperance">
+          <input class="radio" id="maze_theme1" type="radio" value="star" name="appearance">
+          <label for="maze_theme1">Star</label>
 
           <input class="radio" id="maze_theme2" type="radio" value="blood" name="appearance">
           <label for="maze_theme2">Bloody</label>
 
-          <input class="radio" id="maze_theme3" type="radio" value="star" name="appearance">
-          <label for="maze_theme3">Star</label>
+          <input class="radio" id="maze_theme3" type="radio" value="stone" name="appearance">
+          <label for="maze_theme3">Stone</label>
         </div>
-        
+      </div>
+      
+    </div>
+
+    <div class="content" id="hero_setting">
+      <img class="content_img" src="src/assets/other/hero.png" style="height: 25px; width: 25px"/>
+
+      <div>
+        <legend class="content_title">Hero Shape</legend>
+        <div class="content_section" id="hero_shape">
+          <img class="content_hero_shape" id="octa" src="src/assets/other/octa.png" />
+          <img class="content_hero_shape" id="cone" src="src/assets/other/cone.png" />
+          <img class="content_hero_shape" id="sphere" src="src/assets/other/sphere.png" />
+          <img class="content_hero_shape" id="cylinder" src="src/assets/other/cylinder.png" />
+        </div>
       </div>
 
-      <div class="content" id="hero_setting">
-        <section id="hero_shape">
-          <label>Hero Shape</label>
-          <div id="hero_shape_1"></div>
-          <div id="hero_shape_2"></div>
-          <div id="hero_shape_3"></div>
-        </section>
-
-        <section class="hero_apperance">
-          <label>Hero Apperance</label>
-          <img class="hero_img" id="hero_apperance_1" src="src/assets/textures/hero/blood.jpeg"></img>
-          <img class="hero_img" id="hero_apperance_2" src="src/assets/textures/hero/steel.jpeg"></img>
-          <img class="hero_img" id="hero_apperance_3" src="src/assets/textures/hero/diamond.jpeg"></img>
-        </section>
+      <div>
+        <legend class="content_title">Hero Skin</legend>
+        <div class="content_section" id="hero_skin">
+          <img class="content_hero_shape" id="blood" src="src/assets/textures/hero/blood.jpeg"></img>
+          <img class="content_hero_shape" id="steel" src="src/assets/textures/hero/steel.jpeg"></img>
+          <img class="content_hero_shape" id="diamond" src="src/assets/textures/hero/diamond.jpeg"></img>
+        </div>
       </div>
-
     </div>
 
 
-    <button id="start">Start Game</button>
+
+
+    <!-- <button id="start">Start Game</button> -->
   </div>
   
 

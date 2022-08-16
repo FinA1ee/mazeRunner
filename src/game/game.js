@@ -53,19 +53,14 @@ class Game {
     Game.status = 'Prepare';
   }
 
-  changeMazeSetting(setting) {
-    if (Game.status === 'Prepare') {
-      console.log("setting ",setting);
-      this.maze.initMaze(getMazeConfig(setting));
-    }
+  changeMazeSetting(maze, hero) {
+    console.log("pass: ", hero);
+    if (Game.status === 'Prepare') this.maze.initMaze(maze, hero);
   }
 
-  changeHero(direction) {
-    if (Game.status === 'Prepare') {
-      if (direction) this.heroSelection = this.heroSelection + 1 === 5 ? 1 : this.heroSelection + 1;
-      else this.heroSelection = this.heroSelection - 1 === 0 ? 4 : this.heroSelection - 1;
-    }
-    // this.hero.generateObject(getHeroConfig(this.heroSelection, Game.status));
+  changeHeroSetting(setting) {
+    console.log(setting);
+    if (Game.status === 'Prepare') this.maze.initHero(setting);
   }
 
   render() {

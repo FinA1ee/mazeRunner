@@ -1,8 +1,8 @@
 const getDim = (difficulty) => {
-  if (difficulty === 'easy') return 20;
-  if (difficulty === 'medium') return 35;
-  if (difficulty === 'hard') return 50;
-  return 10; // default
+  if (difficulty === 'easy') return 15;
+  if (difficulty === 'medium') return 25;
+  if (difficulty === 'hard') return 35;
+  return 15; // default
 }
 
 const getFloorTexturePath = (choice) => {
@@ -11,7 +11,6 @@ const getFloorTexturePath = (choice) => {
 }
 
 const getMazeConfig = (mazeSettings) => {
-  console.log(mazeSettings)
   const { difficulty = null, appearance = null } = mazeSettings;
   return {
     dim: getDim(difficulty),
