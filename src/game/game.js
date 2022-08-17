@@ -1,12 +1,14 @@
-import { cameraCreator, orbitControlCreator, rendererCreator, sceneCreator } from '../utils/threeBasicsCreator';
+import { orbitControlCreator, rendererCreator, sceneCreator } from '../utils/threeBasicsCreator';
 import { colorCreator, lightCreator } from '../utils/threeUtilsCreator';
 import { mainCameraConfig, orbitControlConfig } from './consts/cameraConfigs';
 import { themeColors } from './consts/colorConfig';
 import Maze from './maze/maze';
-import textConfig from './consts/textConfig';
-import TextContent from './maze/text';
-import getMazeConfig from './consts/mazeConfig';
+import Hero from './hero/hero';
 
+import textConfig from './consts/textConfig';
+
+import CameraController from './controller/cameraController';
+import TextController from './controller/textController';
 
 class Game {
 
@@ -14,38 +16,21 @@ class Game {
 
   static instance = null;
 
-  constructor(options) {
+  constructor(container) {
 
-    const { container } = options;
-
-    // this.dim = dim;
     this.container = container;
     
-    /** 创建渲染器 */
-    this.renderer = rendererCreator();
+    this.dim = window['DEFAULT_DIM']; // default
 
-    /** 创建摄像头 */
-    this.mainCamera = cameraCreator(mainCameraConfig);
-    this.orbitControl = orbitControlCreator(this.mainCamera, this.renderer.domElement, orbitControlConfig);
-    this.orbitControl.update();
 
-    /** 创建灯光 */
-    this.light = lightCreator(themeColors.light, 1);
-    this.light.position.set(-1, 2, 10);
-
-    let scene = sceneCreator();
-    this.scene = scene;
-    this.scene.add(this.light);
-    this.scene.background = colorCreator(themeColors.background);
+    // this.orbitControl = orbitControlCreator(this.mainCamera, this.renderer.domElement, orbitControlConfig);
+    // this.orbitControl.update();
+  
+    this._initScene();
+    this._initGame();
 
     /** 加入外部容器 */
-    container.appendChild(this.renderer.domElement);
-
-    /** 创建默认迷宫实例 */
-    this.maze = new Maze(this.scene, getMazeConfig({}));
-
-    /** 创建标题实例 */
-    this.title = new TextContent(this.scene, 'Maze Runner', {x: 0, y: 10, z: 0}, textConfig.titleConfig);
+    container.appendChild(this.renderer.domElement); 
 
     /** 开始渲染 */
     this.render();
@@ -53,24 +38,90 @@ class Game {
     Game.status = 'Prepare';
   }
 
-  changeMazeSetting(maze, hero) {
-    console.log("pass: ", hero);
-    if (Game.status === 'Prepare') this.maze.initMaze(maze, hero);
+  _initScene() {
+    /** 创建场景 */
+    this.scene = sceneCreator();
+
+    /** 创建渲染器 */
+    this.renderer = rendererCreator();
+
+    /** 创建灯光 */
+    this.light = lightCreator(themeColors.light, 1);
+    this.light.position.set(-1, 2, 10);
+
+    this.scene.add(this.light);
+    this.scene.background = colorCreator(themeColors.background);
+
+    /** 创建镜头管理器 */
+    this.cameraController = new CameraController();
+    this.cameraController.addNewCamera(mainCameraConfig, 'main');
   }
 
-  changeHeroSetting(setting) {
-    console.log(setting);
-    if (Game.status === 'Prepare') this.maze.initHero(setting);
+  _initGame() {
+    /** 创建默认迷宫实例 */
+    this.maze = new Maze(this.scene);
+    /** 创建英雄 */
+    this.hero = new Hero(this.scene);
+    /** 创建文字管理器 */
+    this.textController = new TextController(this.scene);
+    this.textController.addNewText(textConfig.titleConfig, 'title');
   }
+
+
+  // changeMazeSetting(setting) {
+  //   this.dim = getMazeConfig(maze).dim;
+  //   if (Game.status === 'Prepare') this.maze.generateObject(maze);
+  // }
+
+  // changeHeroSetting(setting) {
+  //   if (Game.status === 'Prepare') this.hero.generateObject(setting);
+  // }
+
+  settingChange(tab, setting) {
+    if (Game.status !== 'Prepare') return;
+    
+    switch(tab) {
+      case 'hero':
+        this.hero.generateObject(setting);
+        break;
+      case 'maze':
+        this.maze.generateObject(setting);
+        break;
+      case 'wall':
+        this.maze.generateObject(setting);
+        break;
+    } 
+  }
+
+  tabSwitch(setting) {
+    switch(setting) {
+      case 'hero':
+        this.cameraController.repositionCamera('main', {
+          x: (this.dim - 1) / 2,
+          y: 4,
+          z: (this.dim - 1 ) / 2 + 3
+        })
+        break;
+      case 'maze':
+        this.cameraController.repositionCamera('main', {
+          x: (this.dim - 1) / 2,
+          y: 10,
+          z: (this.dim - 1) + 10
+        })
+    }
+  }
+
+
 
   render() {
+    const scene = this.scene;
     const renderer = this.renderer;
     const canvas = this.renderer.domElement;
     const container = this.container;
-    const camera = this.mainCamera;
-    const scene = this.scene;
+    const cameraController = this.cameraController;
     const maze = this.maze;
-    const control = this.orbitControl;
+    const hero = this.hero;
+    // const control = this.orbitControl;
 
     function resizeRendererToDisplaySize(renderer, container){
       const canvas = renderer.domElement;
@@ -83,23 +134,27 @@ class Game {
     let lastLoop = Date.now();
     function animate(time) {
       time *= 0.001;  // convert time to seconds
+
+      /** 处理窗口大小变化情况 */
       if (resizeRendererToDisplaySize(renderer, container)) {
         renderer.setSize(container.clientWidth, container.clientHeight, false);
-        camera.aspect = canvas.clientWidth / canvas.clientHeight;
-        camera.updateProjectionMatrix();
+        cameraController.adjustAspect(canvas.clientWidth / canvas.clientHeight);       
       }
 
-      let thisLoop = Date.now();
-      let fps = 1000 / (thisLoop - lastLoop);
-      lastLoop = thisLoop;
 
-      control.update();
+      // // let thisLoop = Date.now();
+      // // let fps = 1000 / (thisLoop - lastLoop);
+      // // lastLoop = thisLoop;
 
       maze.renderObject(time);
-      
+      hero.renderObject(time);
+      cameraController.renderObject(time);
+
       renderer.setPixelRatio(window.devicePixelRatio);
-      renderer.render(scene, camera);
+      renderer.render(scene, cameraController.getCamera());
+
       requestAnimationFrame(animate);
+      // control.update();
     }
     requestAnimationFrame(animate);
   }
@@ -115,7 +170,7 @@ class Game {
     console.log("Game End");
   }
 
-  initGame() {
+  startGame() {
 
     Game.status = 'Game Begin';
     // if (this.maze) {
@@ -125,7 +180,7 @@ class Game {
     
     // this.scene.remove.apply(this.scene, this.scene.children);
     this.maze.initGame();
-  
+    
   }
 
   switchCamera(id) {

@@ -1,8 +1,8 @@
-const getHeroConfig = (dim, config) => {
-  const { shape, skin } = config;
+const getHeroConfig = (setting, gameStatus) => {
+  const { shape, skin } = setting;
   return {
-    location: getHeroInitalLocation(dim),
-    geoConfig: getHeroGeoConfig(shape),
+    location: getHeroInitalLocation(window["DEFAULT_DIM"] || 15, gameStatus),
+    geoConfig: getHeroGeoConfig(shape, gameStatus),
     skin: getHeroSkin(skin)
     // hp: 5
   }
@@ -20,8 +20,8 @@ const octahedronHero = (gameStatus) => {
 const cylinderHero = (gameStatus) => {
   return {
     selection: 'cyclinder',
-    radiusTop: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
-    radiusBottom: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
+    radiusTop: gameStatus !== 'Game Begin' ? 1 : 0.5,
+    radiusBottom: gameStatus !== 'Game Begin' ? 1 : 0.5,
     height: gameStatus !== 'Game Begin' ? 4 : 1,
     radialSegments: 20
   }
@@ -65,6 +65,7 @@ const getHeroGeoConfig = (selection = null, gameStatus = null) => {
 }
 
 const getHeroInitalLocation = (dim, gameStatus) => {
+  console.log("dim: ", dim)
   if (gameStatus !== 'Game Begin') {
     return {
       x: (dim - 1) / 2,

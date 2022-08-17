@@ -2,41 +2,24 @@ import mazeGeneration from "maze-generation";
 import { meshCreator } from "../../utils/threeBasicsCreator";
 import geometryCreator from "../../utils/threeGeometryCreator";
 import { materialCreator } from "../../utils/threeUtilsCreator";
-import getHeroConfig from "../consts/heroConfig";
 import getMazeConfig from "../consts/mazeConfig";
-import Hero from "../hero";
 import Floor from "./floor";
 
 class Maze {
 
-  constructor(scene, mazeConfig) {
-    this.hero = null;
+  constructor(scene) {
     this.cover = null;
     this.scene = scene;
-    this.initMaze(mazeConfig);
+    this.generateObject();
   }
 
-  initHero(heroConfig) {
-    console.log("heroconfig: ", heroConfig);
-    let scene = this.scene;
-    let dim = this.dim;
-    function _genHero() {
-      let hero = new Hero(scene, getHeroConfig(dim, heroConfig || {}));
-      return hero;
-    }
-    this.hero.destroyObject();
-    this.hero = _genHero();
-  }
+  generateObject(settings = {}) {
 
-  initMaze(mazeConfig, heroConfig) {
-    console.log("config: ", heroConfig);
-    const { dim, floorTexture } = getMazeConfig(mazeConfig);
+    const { wallSettings, ...mazeSettings } = settings
+    this.wallSettings = wallSettings;
+    console.log("maze wall: ", wallSettings);
+    const { dim, floorTexture } = getMazeConfig(mazeSettings);
     let scene = this.scene;
-
-    function _genHero() {
-      let hero = new Hero(scene, getHeroConfig(dim, heroConfig || {}));
-      return hero;
-    }
 
     function _genFloorData() {
       let floorData = [];
@@ -45,6 +28,14 @@ class Maze {
         for (let j = 0; j < dim; j++) {
           let floor = new Floor(scene, { row: i, col: j });
           temp.push(floor);
+          if (i === 0 && j === 0) floor.genWalls({ up: true, left: true }, wallSettings);
+          else if (i === dim - 1 && j === dim - 1) floor.genWalls({ down: true, right: true }, wallSettings);
+          else if (i === dim - 1 && j === 0) floor.genWalls({ down: true, left: true }, wallSettings);
+          else if (i === 0 && j === dim - 1) floor.genWalls({ up: true, right: true }, wallSettings);
+          else if (i === 0) floor.genWalls({ up: true }, wallSettings);
+          else if (j === 0) floor.genWalls({ left: true }, wallSettings);
+          else if (i === dim - 1) floor.genWalls({ down: true }, wallSettings);
+          else if (j === dim - 1) floor.genWalls({ right: true }, wallSettings);
         }
         floorData.push(temp);
       }
@@ -53,9 +44,9 @@ class Maze {
 
     function _genFloorCover() {
       let coverGeo = geometryCreator('block', {
-        boxWidth: dim,
-        boxHeight: 0.1,
-        boxDepth: dim
+        width: dim,
+        height: 0.1,
+        depth: dim
       })
 
       let coverMaterial = materialCreator('texture', floorTexture)
@@ -69,40 +60,35 @@ class Maze {
     }
 
     this.destroyMaze();
-
-    this.hero = _genHero();
     this.floorData = _genFloorData();
     this.floorCover = _genFloorCover();
 
-    this.dim = dim || 10;
+    window["DEFAULT_DIM"] = dim;
+    // this.dim = dim || 10;
   }
 
   destroyMaze() {
-    this.iterateFloor((i, j) => {
+    this.floorData && this.iterateFloor((i, j) => {
       this.floorData[i][j].destroyObject();
     })
-
-    this.hero?.destroyObject();
 
     this.scene.remove(this.floorCover);
     delete this.floorCover;
     this.floorData = null;
-
-    this.hero = null;
   }
 
 
   initGame() {
     // this.gameStatus = 'Game Begin';
 
+    let dim = window["DEFAULT_DIM"];
     let coinsCount = this.coinsCount;
     let monsterCount = this.monsterCount; 
-    let dim = this.dim;
     let blockData = this.floorData;
 
     const mazeRawData = mazeGeneration({
-      width: this.dim,
-      height: this.dim,
+      width: dim,
+      height: dim,
       seed: Math.random() * 1000
     });
 
@@ -126,7 +112,7 @@ class Maze {
 
     // this.hero.generateObject(getHeroConfig(1, this.gameStatus));
     this.iterateFloor((i, j) => {
-      this.floorData[i][j].genWalls(mazeRawData.toJSON().rows[i][j]);
+      this.floorData[i][j].genWalls(mazeRawData.toJSON().rows[i][j], this.wallSettings);
     })
     _genCoin();
     _genMonster();
@@ -136,12 +122,12 @@ class Maze {
     this.iterateFloor((i, j) => {
       this.floorData[i][j].renderObject(time);
     })
-    this.hero.renderObject(time);
   }
 
   iterateFloor(cb) {
-    for (let i = 0; i < this.dim; i++) {
-      for (let j = 0; j < this.dim; j++) {
+    const dim = window["DEFAULT_DIM"] || 15;
+    for (let i = 0; i < dim; i++) {
+      for (let j = 0; j < dim; j++) {
         cb(i, j);
       }
     }

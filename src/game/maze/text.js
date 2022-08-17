@@ -2,7 +2,7 @@ import { meshCreator } from "../../utils/threeBasicsCreator";
 import geometryCreator from "../../utils/threeGeometryCreator";
 import { fontLoaderCreator, materialCreator } from "../../utils/threeUtilsCreator";
 import Geometry from "./geometry";
-import * as THREE from 'three';
+
 class TextContent extends Geometry {
 
   constructor(scene, content, position, textConfig) {
@@ -23,7 +23,6 @@ class TextContent extends Geometry {
     let loader = fontLoaderCreator();
 
     loader.load(fontPath, function(font) {
-      console.log(font);
       textGeo = geometryCreator('text', 
         Object.assign({
           content: _this.content,
@@ -31,8 +30,9 @@ class TextContent extends Geometry {
         }, detailConfig)
       );
       material = [
+        
         materialCreator('color', 0xffffff),
-        materialCreator('color', 0xffffff),
+        materialCreator('texture', 'src/assets/textures/font.jpeg'),
       ]
       text = meshCreator(textGeo, material);
       text.position.x = _this.position.x;

@@ -2,7 +2,7 @@ const getDim = (difficulty) => {
   if (difficulty === 'easy') return 15;
   if (difficulty === 'medium') return 25;
   if (difficulty === 'hard') return 35;
-  return 15; // default
+  return window['DEFAULT_DIM']; // default
 }
 
 const getFloorTexturePath = (choice) => {

@@ -4,12 +4,12 @@ const mainCameraConfig = {
   near: 0.1,
   far: 100,
   position: {
-    x: 10,
+    x: 15,
     y: 10,
-    z: 25
+    z: 30
   },
   rotation: {
-    x: -0.5,
+    x: 0,
     y: 0,
     z: 0
   }

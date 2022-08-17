@@ -3,20 +3,24 @@ import geometryCreator from "../../utils/threeGeometryCreator";
 import { meshCreator } from "../../utils/threeBasicsCreator";
 import { materialCreator } from "../../utils/threeUtilsCreator";
 import { themeColors, themeTexture } from "../consts/colorConfig";
-
+import getWallConfig from "../consts/wallConfig";
+import * as Three from 'three';
 class Wall extends Geometry {
-  constructor(scene, location, wallConfig, position) {
+  constructor(scene, location, wallConfig, position, settings) {
     super(scene, location);
     this.scene = scene;
     this.location = location;
-
-    this.generateObject(wallConfig, position);
+    
+    this.generateObject(wallConfig, position, settings);
   }
 
-  generateObject(wallConfig, position) {
+  generateObject(wallConfig, position, settings = {}) {
+    console.log("wall: ", settings);
+    let { surface, height } = getWallConfig(settings);
+    wallConfig.height = height;
 
     let wallGeo = geometryCreator("wall", wallConfig);
-    let wallMaterial = materialCreator("color", 0x66ccff);
+    let wallMaterial = materialCreator("texture", surface);
     let wall = meshCreator(wallGeo, wallMaterial);
 
     wall.position.x = position.x;
@@ -27,7 +31,16 @@ class Wall extends Geometry {
     this.scene.add(wall);
   }
 
-  renderObject(time) {}
+  renderObject(time) {
+    // let { surface, height } = getWallConfig(window['WALL_SETTINGS'] || {})
+    // console.log(surface)
+    // this.wall.material.map = this.loader.load(surface);
+    // this.wall.material.needsUpdate = true
+  }
+
+  destroyObject() {
+    this.scene.remove(this.wall);
+  }
 }
 
 export default Wall;

@@ -1,26 +1,25 @@
-import geometryCreator from '../utils/threeGeometryCreator';
-import Geometry from './maze/geometry';
-import { themeColors, themeTexture } from './consts/colorConfig';
-import getHeroConfig from './consts/heroConfig';
-import { materialCreator } from '../utils/threeUtilsCreator';
-import { meshCreator } from '../utils/threeBasicsCreator';
+import Geometry from '../maze/geometry';
+import getHeroConfig from "../consts/heroConfig";
+import geometryCreator from '../../utils/threeGeometryCreator';
+import { meshCreator } from '../../utils/threeBasicsCreator';
+import { materialCreator } from '../../utils/threeUtilsCreator';
 
 class Hero extends Geometry {
   
-  constructor(scene, heroConfig) {
+  constructor(scene) {
     super(scene);
     this.scene = scene;
     this.coins = 0;
-    this.generateObject(heroConfig);
+    this.generateObject();
   }
 
-  generateObject(heroConfig) {
+  generateObject(settings = {}, gameStatus = null) {
 
     /** gc the old objs */
     this.destroyObject();
 
     /** create new */
-    let { location, geoConfig, skin } = heroConfig;
+    let { location, geoConfig, skin } = getHeroConfig(settings, gameStatus);
     let heroGeo = geometryCreator('hero', geoConfig);
     let material = materialCreator('texture', skin);
     let hero = meshCreator(heroGeo, material);

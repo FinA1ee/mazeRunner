@@ -25,8 +25,8 @@ const textCreator = (textConfig) => {
 }
 
 const boxCreator = (config) => {
-  config = Object.values(config);
-  let box = new Three.BoxGeometry(...config);
+  const { width, height, depth } = config; 
+  let box = new Three.BoxGeometry(width, height, depth);
   return box;
 }
 

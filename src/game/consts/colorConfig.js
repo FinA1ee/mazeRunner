@@ -1,7 +1,7 @@
 const texturePath = 'src/assets/textures/';
 
 const themeColors = {
-  background: 0x8fb1e9,
+  background: 0x000000,
   wall: 0x8fb1e9,
   hero: 0xf6f18c,
   light: 0xffffff,

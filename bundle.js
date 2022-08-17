@@ -11,8 +11,13 @@ function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o =
 
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
+window['DEFAULT_DIM'] = 15;
 var game;
 var mazeSettings = {
+  wallSettings: {
+    surface: null,
+    isLow: true
+  },
   difficulty: null,
   appearance: null
 };
@@ -31,12 +36,12 @@ window.onload = function () {
   var mazeApperance = document.getElementById('maze_apperance');
   var heroShape = document.getElementById('hero_shape');
   var heroSkin = document.getElementById('hero_skin');
+  var wallSurface = document.getElementById('wall_surface');
+  var wallHeight = document.getElementById('wall_height');
   var gameStartBtn = document.getElementById("start");
 
   if (container) {
-    game = _game["default"].getInstance({
-      container: container
-    });
+    game = _game["default"].getInstance(container);
     window.addEventListener('keydown', handleHeroSelection);
     window.addEventListener('keydown', handleGameStartInput);
     window.addEventListener('keydown', handleHeroMoveInput);
@@ -45,7 +50,6 @@ window.onload = function () {
   if (tabWrapper) {
     tabWrapper.addEventListener('click', function (e) {
       var id = e.target.dataset.id;
-      console.log("id:", id);
 
       if (id) {
         var _iterator = _createForOfIteratorHelper(tabButtons),
@@ -64,6 +68,15 @@ window.onload = function () {
 
         ;
         e.target.classList.add('active');
+        ;
+
+        if (id === 'hero_setting') {
+          game && game.tabSwitch('hero');
+        }
+
+        if (id === 'maze_setting') {
+          game && game.tabSwitch('maze');
+        }
 
         var _iterator2 = _createForOfIteratorHelper(contents),
             _step2;
@@ -92,6 +105,8 @@ window.onload = function () {
   if (mazeApperance) mazeApperance.addEventListener('change', handleMazeApperanceSelection);
   if (heroShape) heroShape.addEventListener('click', handleHeroShapeChange);
   if (heroSkin) heroSkin.addEventListener('click', handleHeroSkinChange);
+  if (wallSurface) wallSurface.addEventListener('click', handleWallSurfaceChange);
+  if (wallHeight) wallHeight.addEventListener('click', handleWallHeightChange);
 };
 
 var handleCameraSwitch = function handleCameraSwitch(id) {
@@ -99,34 +114,52 @@ var handleCameraSwitch = function handleCameraSwitch(id) {
 };
 
 var handleGameStart = function handleGameStart(e) {
-  game && game.initGame();
+  game && game.startGame();
+  document.getElementById("panel").classList.remove('active');
+  ;
 };
 
 var handleMazeDifficultySelection = function handleMazeDifficultySelection(e) {
   if (e.target && e.target.nodeName.toUpperCase() == "INPUT") {
     mazeSettings.difficulty = e.target.value;
-    game && game.changeMazeSetting(mazeSettings, heroSettings);
+    game && game.settingChange('maze', mazeSettings);
+    game && game.settingChange('hero', heroSettings);
   }
 };
 
 var handleMazeApperanceSelection = function handleMazeApperanceSelection(e) {
   if (e.target && e.target.nodeName.toUpperCase() == "INPUT") {
     mazeSettings.appearance = e.target.value;
-    game && game.changeMazeSetting(mazeSettings, heroSettings);
+    game && game.settingChange('maze', mazeSettings);
   }
 };
 
 var handleHeroShapeChange = function handleHeroShapeChange(e) {
   if (e.target && e.target.nodeName.toUpperCase() == "IMG") {
     heroSettings.shape = e.target.id;
-    game && game.changeHeroSetting(heroSettings);
+    game && game.settingChange('hero', heroSettings);
   }
 };
 
 var handleHeroSkinChange = function handleHeroSkinChange(e) {
   if (e.target && e.target.nodeName.toUpperCase() == "IMG") {
     heroSettings.skin = e.target.id;
-    game && game.changeHeroSetting(heroSettings);
+    game && game.settingChange('hero', heroSettings);
+  }
+};
+
+var handleWallSurfaceChange = function handleWallSurfaceChange(e) {
+  if (e.target && e.target.nodeName.toUpperCase() == "IMG") {
+    mazeSettings.wallSettings.surface = e.target.id;
+    game && game.settingChange('maze', mazeSettings);
+  }
+};
+
+var handleWallHeightChange = function handleWallHeightChange(e) {
+  if (e.target && e.target.nodeName.toUpperCase() == "INPUT") {
+    mazeSettings.wallSettings.isLow = e.target.value === "low";
+    console.log("maze sss", mazeSettings);
+    game && game.settingChange('maze', mazeSettings);
   }
 };
 
@@ -156,7 +189,830 @@ var handleHeroSelection = function handleHeroSelection(e) {
   }
 };
 
-},{"./src/game/game":15}],2:[function(require,module,exports){
+},{"./src/game/game":20}],2:[function(require,module,exports){
+(function (process){(function (){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+/**
+ * The Ease class provides a collection of easing functions for use with tween.js.
+ */
+var Easing = {
+    Linear: {
+        None: function (amount) {
+            return amount;
+        },
+    },
+    Quadratic: {
+        In: function (amount) {
+            return amount * amount;
+        },
+        Out: function (amount) {
+            return amount * (2 - amount);
+        },
+        InOut: function (amount) {
+            if ((amount *= 2) < 1) {
+                return 0.5 * amount * amount;
+            }
+            return -0.5 * (--amount * (amount - 2) - 1);
+        },
+    },
+    Cubic: {
+        In: function (amount) {
+            return amount * amount * amount;
+        },
+        Out: function (amount) {
+            return --amount * amount * amount + 1;
+        },
+        InOut: function (amount) {
+            if ((amount *= 2) < 1) {
+                return 0.5 * amount * amount * amount;
+            }
+            return 0.5 * ((amount -= 2) * amount * amount + 2);
+        },
+    },
+    Quartic: {
+        In: function (amount) {
+            return amount * amount * amount * amount;
+        },
+        Out: function (amount) {
+            return 1 - --amount * amount * amount * amount;
+        },
+        InOut: function (amount) {
+            if ((amount *= 2) < 1) {
+                return 0.5 * amount * amount * amount * amount;
+            }
+            return -0.5 * ((amount -= 2) * amount * amount * amount - 2);
+        },
+    },
+    Quintic: {
+        In: function (amount) {
+            return amount * amount * amount * amount * amount;
+        },
+        Out: function (amount) {
+            return --amount * amount * amount * amount * amount + 1;
+        },
+        InOut: function (amount) {
+            if ((amount *= 2) < 1) {
+                return 0.5 * amount * amount * amount * amount * amount;
+            }
+            return 0.5 * ((amount -= 2) * amount * amount * amount * amount + 2);
+        },
+    },
+    Sinusoidal: {
+        In: function (amount) {
+            return 1 - Math.cos((amount * Math.PI) / 2);
+        },
+        Out: function (amount) {
+            return Math.sin((amount * Math.PI) / 2);
+        },
+        InOut: function (amount) {
+            return 0.5 * (1 - Math.cos(Math.PI * amount));
+        },
+    },
+    Exponential: {
+        In: function (amount) {
+            return amount === 0 ? 0 : Math.pow(1024, amount - 1);
+        },
+        Out: function (amount) {
+            return amount === 1 ? 1 : 1 - Math.pow(2, -10 * amount);
+        },
+        InOut: function (amount) {
+            if (amount === 0) {
+                return 0;
+            }
+            if (amount === 1) {
+                return 1;
+            }
+            if ((amount *= 2) < 1) {
+                return 0.5 * Math.pow(1024, amount - 1);
+            }
+            return 0.5 * (-Math.pow(2, -10 * (amount - 1)) + 2);
+        },
+    },
+    Circular: {
+        In: function (amount) {
+            return 1 - Math.sqrt(1 - amount * amount);
+        },
+        Out: function (amount) {
+            return Math.sqrt(1 - --amount * amount);
+        },
+        InOut: function (amount) {
+            if ((amount *= 2) < 1) {
+                return -0.5 * (Math.sqrt(1 - amount * amount) - 1);
+            }
+            return 0.5 * (Math.sqrt(1 - (amount -= 2) * amount) + 1);
+        },
+    },
+    Elastic: {
+        In: function (amount) {
+            if (amount === 0) {
+                return 0;
+            }
+            if (amount === 1) {
+                return 1;
+            }
+            return -Math.pow(2, 10 * (amount - 1)) * Math.sin((amount - 1.1) * 5 * Math.PI);
+        },
+        Out: function (amount) {
+            if (amount === 0) {
+                return 0;
+            }
+            if (amount === 1) {
+                return 1;
+            }
+            return Math.pow(2, -10 * amount) * Math.sin((amount - 0.1) * 5 * Math.PI) + 1;
+        },
+        InOut: function (amount) {
+            if (amount === 0) {
+                return 0;
+            }
+            if (amount === 1) {
+                return 1;
+            }
+            amount *= 2;
+            if (amount < 1) {
+                return -0.5 * Math.pow(2, 10 * (amount - 1)) * Math.sin((amount - 1.1) * 5 * Math.PI);
+            }
+            return 0.5 * Math.pow(2, -10 * (amount - 1)) * Math.sin((amount - 1.1) * 5 * Math.PI) + 1;
+        },
+    },
+    Back: {
+        In: function (amount) {
+            var s = 1.70158;
+            return amount * amount * ((s + 1) * amount - s);
+        },
+        Out: function (amount) {
+            var s = 1.70158;
+            return --amount * amount * ((s + 1) * amount + s) + 1;
+        },
+        InOut: function (amount) {
+            var s = 1.70158 * 1.525;
+            if ((amount *= 2) < 1) {
+                return 0.5 * (amount * amount * ((s + 1) * amount - s));
+            }
+            return 0.5 * ((amount -= 2) * amount * ((s + 1) * amount + s) + 2);
+        },
+    },
+    Bounce: {
+        In: function (amount) {
+            return 1 - Easing.Bounce.Out(1 - amount);
+        },
+        Out: function (amount) {
+            if (amount < 1 / 2.75) {
+                return 7.5625 * amount * amount;
+            }
+            else if (amount < 2 / 2.75) {
+                return 7.5625 * (amount -= 1.5 / 2.75) * amount + 0.75;
+            }
+            else if (amount < 2.5 / 2.75) {
+                return 7.5625 * (amount -= 2.25 / 2.75) * amount + 0.9375;
+            }
+            else {
+                return 7.5625 * (amount -= 2.625 / 2.75) * amount + 0.984375;
+            }
+        },
+        InOut: function (amount) {
+            if (amount < 0.5) {
+                return Easing.Bounce.In(amount * 2) * 0.5;
+            }
+            return Easing.Bounce.Out(amount * 2 - 1) * 0.5 + 0.5;
+        },
+    },
+};
+
+var now;
+// Include a performance.now polyfill.
+// In node.js, use process.hrtime.
+// eslint-disable-next-line
+// @ts-ignore
+if (typeof self === 'undefined' && typeof process !== 'undefined' && process.hrtime) {
+    now = function () {
+        // eslint-disable-next-line
+        // @ts-ignore
+        var time = process.hrtime();
+        // Convert [seconds, nanoseconds] to milliseconds.
+        return time[0] * 1000 + time[1] / 1000000;
+    };
+}
+// In a browser, use self.performance.now if it is available.
+else if (typeof self !== 'undefined' && self.performance !== undefined && self.performance.now !== undefined) {
+    // This must be bound, because directly assigning this function
+    // leads to an invocation exception in Chrome.
+    now = self.performance.now.bind(self.performance);
+}
+// Use Date.now if it is available.
+else if (Date.now !== undefined) {
+    now = Date.now;
+}
+// Otherwise, use 'new Date().getTime()'.
+else {
+    now = function () {
+        return new Date().getTime();
+    };
+}
+var now$1 = now;
+
+/**
+ * Controlling groups of tweens
+ *
+ * Using the TWEEN singleton to manage your tweens can cause issues in large apps with many components.
+ * In these cases, you may want to create your own smaller groups of tween
+ */
+var Group = /** @class */ (function () {
+    function Group() {
+        this._tweens = {};
+        this._tweensAddedDuringUpdate = {};
+    }
+    Group.prototype.getAll = function () {
+        var _this = this;
+        return Object.keys(this._tweens).map(function (tweenId) {
+            return _this._tweens[tweenId];
+        });
+    };
+    Group.prototype.removeAll = function () {
+        this._tweens = {};
+    };
+    Group.prototype.add = function (tween) {
+        this._tweens[tween.getId()] = tween;
+        this._tweensAddedDuringUpdate[tween.getId()] = tween;
+    };
+    Group.prototype.remove = function (tween) {
+        delete this._tweens[tween.getId()];
+        delete this._tweensAddedDuringUpdate[tween.getId()];
+    };
+    Group.prototype.update = function (time, preserve) {
+        if (time === void 0) { time = now$1(); }
+        if (preserve === void 0) { preserve = false; }
+        var tweenIds = Object.keys(this._tweens);
+        if (tweenIds.length === 0) {
+            return false;
+        }
+        // Tweens are updated in "batches". If you add a new tween during an
+        // update, then the new tween will be updated in the next batch.
+        // If you remove a tween during an update, it may or may not be updated.
+        // However, if the removed tween was added during the current batch,
+        // then it will not be updated.
+        while (tweenIds.length > 0) {
+            this._tweensAddedDuringUpdate = {};
+            for (var i = 0; i < tweenIds.length; i++) {
+                var tween = this._tweens[tweenIds[i]];
+                var autoStart = !preserve;
+                if (tween && tween.update(time, autoStart) === false && !preserve) {
+                    delete this._tweens[tweenIds[i]];
+                }
+            }
+            tweenIds = Object.keys(this._tweensAddedDuringUpdate);
+        }
+        return true;
+    };
+    return Group;
+}());
+
+/**
+ *
+ */
+var Interpolation = {
+    Linear: function (v, k) {
+        var m = v.length - 1;
+        var f = m * k;
+        var i = Math.floor(f);
+        var fn = Interpolation.Utils.Linear;
+        if (k < 0) {
+            return fn(v[0], v[1], f);
+        }
+        if (k > 1) {
+            return fn(v[m], v[m - 1], m - f);
+        }
+        return fn(v[i], v[i + 1 > m ? m : i + 1], f - i);
+    },
+    Bezier: function (v, k) {
+        var b = 0;
+        var n = v.length - 1;
+        var pw = Math.pow;
+        var bn = Interpolation.Utils.Bernstein;
+        for (var i = 0; i <= n; i++) {
+            b += pw(1 - k, n - i) * pw(k, i) * v[i] * bn(n, i);
+        }
+        return b;
+    },
+    CatmullRom: function (v, k) {
+        var m = v.length - 1;
+        var f = m * k;
+        var i = Math.floor(f);
+        var fn = Interpolation.Utils.CatmullRom;
+        if (v[0] === v[m]) {
+            if (k < 0) {
+                i = Math.floor((f = m * (1 + k)));
+            }
+            return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i);
+        }
+        else {
+            if (k < 0) {
+                return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0]);
+            }
+            if (k > 1) {
+                return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m]);
+            }
+            return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i);
+        }
+    },
+    Utils: {
+        Linear: function (p0, p1, t) {
+            return (p1 - p0) * t + p0;
+        },
+        Bernstein: function (n, i) {
+            var fc = Interpolation.Utils.Factorial;
+            return fc(n) / fc(i) / fc(n - i);
+        },
+        Factorial: (function () {
+            var a = [1];
+            return function (n) {
+                var s = 1;
+                if (a[n]) {
+                    return a[n];
+                }
+                for (var i = n; i > 1; i--) {
+                    s *= i;
+                }
+                a[n] = s;
+                return s;
+            };
+        })(),
+        CatmullRom: function (p0, p1, p2, p3, t) {
+            var v0 = (p2 - p0) * 0.5;
+            var v1 = (p3 - p1) * 0.5;
+            var t2 = t * t;
+            var t3 = t * t2;
+            return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (-3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+        },
+    },
+};
+
+/**
+ * Utils
+ */
+var Sequence = /** @class */ (function () {
+    function Sequence() {
+    }
+    Sequence.nextId = function () {
+        return Sequence._nextId++;
+    };
+    Sequence._nextId = 0;
+    return Sequence;
+}());
+
+var mainGroup = new Group();
+
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
+ * ----------------------------------------------
+ *
+ * See https://github.com/tweenjs/tween.js/graphs/contributors for the full list of contributors.
+ * Thank you all, you're awesome!
+ */
+var Tween = /** @class */ (function () {
+    function Tween(_object, _group) {
+        if (_group === void 0) { _group = mainGroup; }
+        this._object = _object;
+        this._group = _group;
+        this._isPaused = false;
+        this._pauseStart = 0;
+        this._valuesStart = {};
+        this._valuesEnd = {};
+        this._valuesStartRepeat = {};
+        this._duration = 1000;
+        this._initialRepeat = 0;
+        this._repeat = 0;
+        this._yoyo = false;
+        this._isPlaying = false;
+        this._reversed = false;
+        this._delayTime = 0;
+        this._startTime = 0;
+        this._easingFunction = Easing.Linear.None;
+        this._interpolationFunction = Interpolation.Linear;
+        this._chainedTweens = [];
+        this._onStartCallbackFired = false;
+        this._id = Sequence.nextId();
+        this._isChainStopped = false;
+        this._goToEnd = false;
+    }
+    Tween.prototype.getId = function () {
+        return this._id;
+    };
+    Tween.prototype.isPlaying = function () {
+        return this._isPlaying;
+    };
+    Tween.prototype.isPaused = function () {
+        return this._isPaused;
+    };
+    Tween.prototype.to = function (properties, duration) {
+        // TODO? restore this, then update the 07_dynamic_to example to set fox
+        // tween's to on each update. That way the behavior is opt-in (there's
+        // currently no opt-out).
+        // for (const prop in properties) this._valuesEnd[prop] = properties[prop]
+        this._valuesEnd = Object.create(properties);
+        if (duration !== undefined) {
+            this._duration = duration;
+        }
+        return this;
+    };
+    Tween.prototype.duration = function (d) {
+        this._duration = d;
+        return this;
+    };
+    Tween.prototype.start = function (time) {
+        if (this._isPlaying) {
+            return this;
+        }
+        // eslint-disable-next-line
+        this._group && this._group.add(this);
+        this._repeat = this._initialRepeat;
+        if (this._reversed) {
+            // If we were reversed (f.e. using the yoyo feature) then we need to
+            // flip the tween direction back to forward.
+            this._reversed = false;
+            for (var property in this._valuesStartRepeat) {
+                this._swapEndStartRepeatValues(property);
+                this._valuesStart[property] = this._valuesStartRepeat[property];
+            }
+        }
+        this._isPlaying = true;
+        this._isPaused = false;
+        this._onStartCallbackFired = false;
+        this._isChainStopped = false;
+        this._startTime = time !== undefined ? (typeof time === 'string' ? now$1() + parseFloat(time) : time) : now$1();
+        this._startTime += this._delayTime;
+        this._setupProperties(this._object, this._valuesStart, this._valuesEnd, this._valuesStartRepeat);
+        return this;
+    };
+    Tween.prototype._setupProperties = function (_object, _valuesStart, _valuesEnd, _valuesStartRepeat) {
+        for (var property in _valuesEnd) {
+            var startValue = _object[property];
+            var startValueIsArray = Array.isArray(startValue);
+            var propType = startValueIsArray ? 'array' : typeof startValue;
+            var isInterpolationList = !startValueIsArray && Array.isArray(_valuesEnd[property]);
+            // If `to()` specifies a property that doesn't exist in the source object,
+            // we should not set that property in the object
+            if (propType === 'undefined' || propType === 'function') {
+                continue;
+            }
+            // Check if an Array was provided as property value
+            if (isInterpolationList) {
+                var endValues = _valuesEnd[property];
+                if (endValues.length === 0) {
+                    continue;
+                }
+                // handle an array of relative values
+                endValues = endValues.map(this._handleRelativeValue.bind(this, startValue));
+                // Create a local copy of the Array with the start value at the front
+                _valuesEnd[property] = [startValue].concat(endValues);
+            }
+            // handle the deepness of the values
+            if ((propType === 'object' || startValueIsArray) && startValue && !isInterpolationList) {
+                _valuesStart[property] = startValueIsArray ? [] : {};
+                // eslint-disable-next-line
+                for (var prop in startValue) {
+                    // eslint-disable-next-line
+                    // @ts-ignore FIXME?
+                    _valuesStart[property][prop] = startValue[prop];
+                }
+                _valuesStartRepeat[property] = startValueIsArray ? [] : {}; // TODO? repeat nested values? And yoyo? And array values?
+                // eslint-disable-next-line
+                // @ts-ignore FIXME?
+                this._setupProperties(startValue, _valuesStart[property], _valuesEnd[property], _valuesStartRepeat[property]);
+            }
+            else {
+                // Save the starting value, but only once.
+                if (typeof _valuesStart[property] === 'undefined') {
+                    _valuesStart[property] = startValue;
+                }
+                if (!startValueIsArray) {
+                    // eslint-disable-next-line
+                    // @ts-ignore FIXME?
+                    _valuesStart[property] *= 1.0; // Ensures we're using numbers, not strings
+                }
+                if (isInterpolationList) {
+                    // eslint-disable-next-line
+                    // @ts-ignore FIXME?
+                    _valuesStartRepeat[property] = _valuesEnd[property].slice().reverse();
+                }
+                else {
+                    _valuesStartRepeat[property] = _valuesStart[property] || 0;
+                }
+            }
+        }
+    };
+    Tween.prototype.stop = function () {
+        if (!this._isChainStopped) {
+            this._isChainStopped = true;
+            this.stopChainedTweens();
+        }
+        if (!this._isPlaying) {
+            return this;
+        }
+        // eslint-disable-next-line
+        this._group && this._group.remove(this);
+        this._isPlaying = false;
+        this._isPaused = false;
+        if (this._onStopCallback) {
+            this._onStopCallback(this._object);
+        }
+        return this;
+    };
+    Tween.prototype.end = function () {
+        this._goToEnd = true;
+        this.update(Infinity);
+        return this;
+    };
+    Tween.prototype.pause = function (time) {
+        if (time === void 0) { time = now$1(); }
+        if (this._isPaused || !this._isPlaying) {
+            return this;
+        }
+        this._isPaused = true;
+        this._pauseStart = time;
+        // eslint-disable-next-line
+        this._group && this._group.remove(this);
+        return this;
+    };
+    Tween.prototype.resume = function (time) {
+        if (time === void 0) { time = now$1(); }
+        if (!this._isPaused || !this._isPlaying) {
+            return this;
+        }
+        this._isPaused = false;
+        this._startTime += time - this._pauseStart;
+        this._pauseStart = 0;
+        // eslint-disable-next-line
+        this._group && this._group.add(this);
+        return this;
+    };
+    Tween.prototype.stopChainedTweens = function () {
+        for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
+            this._chainedTweens[i].stop();
+        }
+        return this;
+    };
+    Tween.prototype.group = function (group) {
+        this._group = group;
+        return this;
+    };
+    Tween.prototype.delay = function (amount) {
+        this._delayTime = amount;
+        return this;
+    };
+    Tween.prototype.repeat = function (times) {
+        this._initialRepeat = times;
+        this._repeat = times;
+        return this;
+    };
+    Tween.prototype.repeatDelay = function (amount) {
+        this._repeatDelayTime = amount;
+        return this;
+    };
+    Tween.prototype.yoyo = function (yoyo) {
+        this._yoyo = yoyo;
+        return this;
+    };
+    Tween.prototype.easing = function (easingFunction) {
+        this._easingFunction = easingFunction;
+        return this;
+    };
+    Tween.prototype.interpolation = function (interpolationFunction) {
+        this._interpolationFunction = interpolationFunction;
+        return this;
+    };
+    Tween.prototype.chain = function () {
+        var tweens = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            tweens[_i] = arguments[_i];
+        }
+        this._chainedTweens = tweens;
+        return this;
+    };
+    Tween.prototype.onStart = function (callback) {
+        this._onStartCallback = callback;
+        return this;
+    };
+    Tween.prototype.onUpdate = function (callback) {
+        this._onUpdateCallback = callback;
+        return this;
+    };
+    Tween.prototype.onRepeat = function (callback) {
+        this._onRepeatCallback = callback;
+        return this;
+    };
+    Tween.prototype.onComplete = function (callback) {
+        this._onCompleteCallback = callback;
+        return this;
+    };
+    Tween.prototype.onStop = function (callback) {
+        this._onStopCallback = callback;
+        return this;
+    };
+    /**
+     * @returns true if the tween is still playing after the update, false
+     * otherwise (calling update on a paused tween still returns true because
+     * it is still playing, just paused).
+     */
+    Tween.prototype.update = function (time, autoStart) {
+        if (time === void 0) { time = now$1(); }
+        if (autoStart === void 0) { autoStart = true; }
+        if (this._isPaused)
+            return true;
+        var property;
+        var elapsed;
+        var endTime = this._startTime + this._duration;
+        if (!this._goToEnd && !this._isPlaying) {
+            if (time > endTime)
+                return false;
+            if (autoStart)
+                this.start(time);
+        }
+        this._goToEnd = false;
+        if (time < this._startTime) {
+            return true;
+        }
+        if (this._onStartCallbackFired === false) {
+            if (this._onStartCallback) {
+                this._onStartCallback(this._object);
+            }
+            this._onStartCallbackFired = true;
+        }
+        elapsed = (time - this._startTime) / this._duration;
+        elapsed = this._duration === 0 || elapsed > 1 ? 1 : elapsed;
+        var value = this._easingFunction(elapsed);
+        // properties transformations
+        this._updateProperties(this._object, this._valuesStart, this._valuesEnd, value);
+        if (this._onUpdateCallback) {
+            this._onUpdateCallback(this._object, elapsed);
+        }
+        if (elapsed === 1) {
+            if (this._repeat > 0) {
+                if (isFinite(this._repeat)) {
+                    this._repeat--;
+                }
+                // Reassign starting values, restart by making startTime = now
+                for (property in this._valuesStartRepeat) {
+                    if (!this._yoyo && typeof this._valuesEnd[property] === 'string') {
+                        this._valuesStartRepeat[property] =
+                            // eslint-disable-next-line
+                            // @ts-ignore FIXME?
+                            this._valuesStartRepeat[property] + parseFloat(this._valuesEnd[property]);
+                    }
+                    if (this._yoyo) {
+                        this._swapEndStartRepeatValues(property);
+                    }
+                    this._valuesStart[property] = this._valuesStartRepeat[property];
+                }
+                if (this._yoyo) {
+                    this._reversed = !this._reversed;
+                }
+                if (this._repeatDelayTime !== undefined) {
+                    this._startTime = time + this._repeatDelayTime;
+                }
+                else {
+                    this._startTime = time + this._delayTime;
+                }
+                if (this._onRepeatCallback) {
+                    this._onRepeatCallback(this._object);
+                }
+                return true;
+            }
+            else {
+                if (this._onCompleteCallback) {
+                    this._onCompleteCallback(this._object);
+                }
+                for (var i = 0, numChainedTweens = this._chainedTweens.length; i < numChainedTweens; i++) {
+                    // Make the chained tweens start exactly at the time they should,
+                    // even if the `update()` method was called way past the duration of the tween
+                    this._chainedTweens[i].start(this._startTime + this._duration);
+                }
+                this._isPlaying = false;
+                return false;
+            }
+        }
+        return true;
+    };
+    Tween.prototype._updateProperties = function (_object, _valuesStart, _valuesEnd, value) {
+        for (var property in _valuesEnd) {
+            // Don't update properties that do not exist in the source object
+            if (_valuesStart[property] === undefined) {
+                continue;
+            }
+            var start = _valuesStart[property] || 0;
+            var end = _valuesEnd[property];
+            var startIsArray = Array.isArray(_object[property]);
+            var endIsArray = Array.isArray(end);
+            var isInterpolationList = !startIsArray && endIsArray;
+            if (isInterpolationList) {
+                _object[property] = this._interpolationFunction(end, value);
+            }
+            else if (typeof end === 'object' && end) {
+                // eslint-disable-next-line
+                // @ts-ignore FIXME?
+                this._updateProperties(_object[property], start, end, value);
+            }
+            else {
+                // Parses relative end values with start as base (e.g.: +10, -3)
+                end = this._handleRelativeValue(start, end);
+                // Protect against non numeric properties.
+                if (typeof end === 'number') {
+                    // eslint-disable-next-line
+                    // @ts-ignore FIXME?
+                    _object[property] = start + (end - start) * value;
+                }
+            }
+        }
+    };
+    Tween.prototype._handleRelativeValue = function (start, end) {
+        if (typeof end !== 'string') {
+            return end;
+        }
+        if (end.charAt(0) === '+' || end.charAt(0) === '-') {
+            return start + parseFloat(end);
+        }
+        else {
+            return parseFloat(end);
+        }
+    };
+    Tween.prototype._swapEndStartRepeatValues = function (property) {
+        var tmp = this._valuesStartRepeat[property];
+        var endValue = this._valuesEnd[property];
+        if (typeof endValue === 'string') {
+            this._valuesStartRepeat[property] = this._valuesStartRepeat[property] + parseFloat(endValue);
+        }
+        else {
+            this._valuesStartRepeat[property] = this._valuesEnd[property];
+        }
+        this._valuesEnd[property] = tmp;
+    };
+    return Tween;
+}());
+
+var VERSION = '18.6.4';
+
+/**
+ * Tween.js - Licensed under the MIT license
+ * https://github.com/tweenjs/tween.js
+ * ----------------------------------------------
+ *
+ * See https://github.com/tweenjs/tween.js/graphs/contributors for the full list of contributors.
+ * Thank you all, you're awesome!
+ */
+var nextId = Sequence.nextId;
+/**
+ * Controlling groups of tweens
+ *
+ * Using the TWEEN singleton to manage your tweens can cause issues in large apps with many components.
+ * In these cases, you may want to create your own smaller groups of tweens.
+ */
+var TWEEN = mainGroup;
+// This is the best way to export things in a way that's compatible with both ES
+// Modules and CommonJS, without build hacks, and so as not to break the
+// existing API.
+// https://github.com/rollup/rollup/issues/1961#issuecomment-423037881
+var getAll = TWEEN.getAll.bind(TWEEN);
+var removeAll = TWEEN.removeAll.bind(TWEEN);
+var add = TWEEN.add.bind(TWEEN);
+var remove = TWEEN.remove.bind(TWEEN);
+var update = TWEEN.update.bind(TWEEN);
+var exports$1 = {
+    Easing: Easing,
+    Group: Group,
+    Interpolation: Interpolation,
+    now: now$1,
+    Sequence: Sequence,
+    nextId: nextId,
+    Tween: Tween,
+    VERSION: VERSION,
+    getAll: getAll,
+    removeAll: removeAll,
+    add: add,
+    remove: remove,
+    update: update,
+};
+
+exports.Easing = Easing;
+exports.Group = Group;
+exports.Interpolation = Interpolation;
+exports.Sequence = Sequence;
+exports.Tween = Tween;
+exports.VERSION = VERSION;
+exports.add = add;
+exports.default = exports$1;
+exports.getAll = getAll;
+exports.nextId = nextId;
+exports.now = now$1;
+exports.remove = remove;
+exports.removeAll = removeAll;
+exports.update = update;
+
+}).call(this)}).call(this,require('_process'))
+},{"_process":8}],3:[function(require,module,exports){
 const Generator = require('./src/Generator');
 const Prando = require('prando');
 
@@ -184,7 +1040,7 @@ module.exports = (options) => {
   return mazeGen.generateMaze(algorithm, prando);
 };
 
-},{"./src/Generator":4,"prando":6}],3:[function(require,module,exports){
+},{"./src/Generator":5,"prando":7}],4:[function(require,module,exports){
 /**
  * A class to represent an individual cell within the maze
  */
@@ -288,7 +1144,7 @@ class Cell {
 
 module.exports = Cell;
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 const Prando = require('prando');
 const Maze = require('./Maze');
 
@@ -440,7 +1296,7 @@ class Generator {
 
 module.exports = Generator;
 
-},{"./Maze":5,"prando":6}],5:[function(require,module,exports){
+},{"./Maze":6,"prando":7}],6:[function(require,module,exports){
 const Cell = require('./Cell');
 
 /**
@@ -715,7 +1571,7 @@ class Maze {
 
 module.exports = Maze;
 
-},{"./Cell":3}],6:[function(require,module,exports){
+},{"./Cell":4}],7:[function(require,module,exports){
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define(factory) :
@@ -899,7 +1755,193 @@ module.exports = Maze;
 })));
 module.exports.default = module.exports; // Terrible injection just so it works regardless of how it's required
 
-},{}],7:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],9:[function(require,module,exports){
 /* three-orbitcontrols addendum */ var THREE = require('three');
 /**
  * @author qiao / https://github.com/qiao
@@ -2083,7 +3125,7 @@ THREE.MapControls.prototype = Object.create( THREE.EventDispatcher.prototype );
 THREE.MapControls.prototype.constructor = THREE.MapControls;
 /* three-orbitcontrols addendum */ module.exports = exports.default = THREE.OrbitControls;
 
-},{"three":8}],8:[function(require,module,exports){
+},{"three":10}],10:[function(require,module,exports){
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
 	typeof define === 'function' && define.amd ? define(['exports'], factory) :
@@ -52130,7 +53172,7 @@ THREE.MapControls.prototype.constructor = THREE.MapControls;
 
 }));
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52138,9 +53180,9 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.monsterConfig = exports.coinConfig = exports.blockConfig = void 0;
 var blockConfig = {
-  boxWidth: 1,
-  boxHeight: 0.01,
-  boxDepth: 1
+  width: 1,
+  height: 0.01,
+  depth: 1
 };
 exports.blockConfig = blockConfig;
 var coinConfig = {
@@ -52158,7 +53200,7 @@ var monsterConfig = {
 };
 exports.monsterConfig = monsterConfig;
 
-},{}],10:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52171,12 +53213,12 @@ var mainCameraConfig = {
   near: 0.1,
   far: 100,
   position: {
-    x: 10,
+    x: 15,
     y: 10,
-    z: 25
+    z: 30
   },
   rotation: {
-    x: -0.5,
+    x: 0,
     y: 0,
     z: 0
   }
@@ -52208,7 +53250,7 @@ var orbitControlConfig = {
 
 exports.orbitControlConfig = orbitControlConfig;
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52217,7 +53259,7 @@ Object.defineProperty(exports, "__esModule", {
 exports.themeTexture = exports.themeColors = void 0;
 var texturePath = 'src/assets/textures/';
 var themeColors = {
-  background: 0x8fb1e9,
+  background: 0x000000,
   wall: 0x8fb1e9,
   hero: 0xf6f18c,
   light: 0xffffff,
@@ -52235,7 +53277,7 @@ var themeTexture = {
 };
 exports.themeTexture = themeTexture;
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52243,12 +53285,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var getHeroConfig = function getHeroConfig(dim, config) {
-  var shape = config.shape,
-      skin = config.skin;
+var getHeroConfig = function getHeroConfig(setting, gameStatus) {
+  var shape = setting.shape,
+      skin = setting.skin;
   return {
-    location: getHeroInitalLocation(dim),
-    geoConfig: getHeroGeoConfig(shape),
+    location: getHeroInitalLocation(window["DEFAULT_DIM"] || 15, gameStatus),
+    geoConfig: getHeroGeoConfig(shape, gameStatus),
     skin: getHeroSkin(skin) // hp: 5
 
   };
@@ -52266,8 +53308,8 @@ var octahedronHero = function octahedronHero(gameStatus) {
 var cylinderHero = function cylinderHero(gameStatus) {
   return {
     selection: 'cyclinder',
-    radiusTop: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
-    radiusBottom: gameStatus !== 'Game Begin' ? 1.5 : 0.5,
+    radiusTop: gameStatus !== 'Game Begin' ? 1 : 0.5,
+    radiusBottom: gameStatus !== 'Game Begin' ? 1 : 0.5,
     height: gameStatus !== 'Game Begin' ? 4 : 1,
     radialSegments: 20
   };
@@ -52321,6 +53363,8 @@ var getHeroGeoConfig = function getHeroGeoConfig() {
 };
 
 var getHeroInitalLocation = function getHeroInitalLocation(dim, gameStatus) {
+  console.log("dim: ", dim);
+
   if (gameStatus !== 'Game Begin') {
     return {
       x: (dim - 1) / 2,
@@ -52339,7 +53383,7 @@ var getHeroInitalLocation = function getHeroInitalLocation(dim, gameStatus) {
 var _default = getHeroConfig;
 exports["default"] = _default;
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52351,7 +53395,7 @@ var getDim = function getDim(difficulty) {
   if (difficulty === 'easy') return 15;
   if (difficulty === 'medium') return 25;
   if (difficulty === 'hard') return 35;
-  return 15; // default
+  return window['DEFAULT_DIM']; // default
 };
 
 var getFloorTexturePath = function getFloorTexturePath(choice) {
@@ -52373,7 +53417,7 @@ var getMazeConfig = function getMazeConfig(mazeSettings) {
 var _default = getMazeConfig;
 exports["default"] = _default;
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52382,16 +53426,192 @@ Object.defineProperty(exports, "__esModule", {
 exports["default"] = void 0;
 var textConfig = {
   titleConfig: {
+    content: 'Maze Runner',
+    position: {
+      x: 0,
+      y: 15,
+      z: -5
+    },
     fontPath: 'src/assets/fonts/helvetiker_bold.typeface.json',
-    size: 3,
+    size: 5,
     height: 2,
-    bevelThickness: 5
+    curveSegments: 1,
+    bevelThickness: 1,
+    bevelSize: 1
   }
 };
 var _default = textConfig;
 exports["default"] = _default;
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var getWallConfig = function getWallConfig(setting) {
+  var _setting$surface = setting.surface,
+      surface = _setting$surface === void 0 ? null : _setting$surface,
+      _setting$isLow = setting.isLow,
+      isLow = _setting$isLow === void 0 ? true : _setting$isLow;
+  return {
+    surface: _getWallSurface(surface),
+    height: isLow ? 1.5 : 3
+  };
+};
+
+var _getWallSurface = function _getWallSurface() {
+  var choice = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
+  if (choice) return "src/assets/textures/wall/".concat(choice, ".jpeg");
+  return 'src/assets/textures/wall/brick.jpeg'; // default
+};
+
+var _default = getWallConfig;
+exports["default"] = _default;
+
+},{}],18:[function(require,module,exports){
+"use strict";
+
+function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var TWEEN = _interopRequireWildcard(require("@tweenjs/tween.js"));
+
+var _threeBasicsCreator = require("../../utils/threeBasicsCreator");
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
+
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
+
+function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
+
+function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
+
+function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+
+var CameraController = /*#__PURE__*/function () {
+  function CameraController() {
+    _classCallCheck(this, CameraController);
+
+    this.cameras = new Map();
+  }
+
+  _createClass(CameraController, [{
+    key: "addNewCamera",
+    value: function addNewCamera(cameraConfig, id) {
+      var camera = (0, _threeBasicsCreator.cameraCreator)(cameraConfig);
+      this.cameras.set(id, camera);
+      this.cameraInCharge = camera;
+    }
+  }, {
+    key: "renderObject",
+    value: function renderObject(time) {
+      TWEEN.update();
+    }
+  }, {
+    key: "repositionCamera",
+    value: function repositionCamera(id, coords) {
+      var camera = this.cameras.get(id);
+      var oldCoords = camera.position;
+      new TWEEN.Tween(oldCoords).to({
+        x: coords.x,
+        y: coords.y,
+        z: coords.z
+      }, 1000).easing(TWEEN.Easing.Quadratic.Out).onUpdate(function () {
+        var _camera$position;
+
+        (_camera$position = camera.position).set.apply(_camera$position, _toConsumableArray(Object.values(oldCoords)));
+      }).start();
+    }
+  }, {
+    key: "adjustAspect",
+    value: function adjustAspect(val) {
+      this.cameraInCharge.aspect = val;
+      this.cameraInCharge.updateProjectionMatrix();
+    }
+  }, {
+    key: "getCamera",
+    value: function getCamera() {
+      return this.cameraInCharge;
+    }
+  }]);
+
+  return CameraController;
+}();
+
+var _default = CameraController;
+exports["default"] = _default;
+
+},{"../../utils/threeBasicsCreator":29,"@tweenjs/tween.js":2}],19:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _text = _interopRequireDefault(require("../maze/text"));
+
+var _excluded = ["content", "position"];
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
+
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
+
+var TextController = /*#__PURE__*/function () {
+  function TextController(scene) {
+    _classCallCheck(this, TextController);
+
+    this.scene = scene;
+    this.texts = new Map();
+  }
+
+  _createClass(TextController, [{
+    key: "addNewText",
+    value: function addNewText(textConfig, id) {
+      var content = textConfig.content,
+          position = textConfig.position,
+          config = _objectWithoutProperties(textConfig, _excluded);
+
+      console.log(textConfig, config);
+      var textGeo = new _text["default"](this.scene, content, position, config);
+      this.texts.set(textGeo, id);
+    }
+  }]);
+
+  return TextController;
+}();
+
+var _default = TextController;
+exports["default"] = _default;
+
+},{"../maze/text":27}],20:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -52409,11 +53629,13 @@ var _colorConfig = require("./consts/colorConfig");
 
 var _maze = _interopRequireDefault(require("./maze/maze"));
 
+var _hero = _interopRequireDefault(require("./hero/hero"));
+
 var _textConfig = _interopRequireDefault(require("./consts/textConfig"));
 
-var _text = _interopRequireDefault(require("./maze/text"));
+var _cameraController = _interopRequireDefault(require("./controller/cameraController"));
 
-var _mazeConfig = _interopRequireDefault(require("./consts/mazeConfig"));
+var _textController = _interopRequireDefault(require("./controller/textController"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -52426,41 +53648,21 @@ function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _d
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 var Game = /*#__PURE__*/function () {
-  function Game(options) {
+  function Game(container) {
     _classCallCheck(this, Game);
 
-    var container = options.container; // this.dim = dim;
-
     this.container = container;
-    /** 创建渲染器 */
+    this.dim = window['DEFAULT_DIM']; // default
+    // this.orbitControl = orbitControlCreator(this.mainCamera, this.renderer.domElement, orbitControlConfig);
+    // this.orbitControl.update();
 
-    this.renderer = (0, _threeBasicsCreator.rendererCreator)();
-    /** 创建摄像头 */
+    this._initScene();
 
-    this.mainCamera = (0, _threeBasicsCreator.cameraCreator)(_cameraConfigs.mainCameraConfig);
-    this.orbitControl = (0, _threeBasicsCreator.orbitControlCreator)(this.mainCamera, this.renderer.domElement, _cameraConfigs.orbitControlConfig);
-    this.orbitControl.update();
-    /** 创建灯光 */
-
-    this.light = (0, _threeUtilsCreator.lightCreator)(_colorConfig.themeColors.light, 1);
-    this.light.position.set(-1, 2, 10);
-    var scene = (0, _threeBasicsCreator.sceneCreator)();
-    this.scene = scene;
-    this.scene.add(this.light);
-    this.scene.background = (0, _threeUtilsCreator.colorCreator)(_colorConfig.themeColors.background);
+    this._initGame();
     /** 加入外部容器 */
 
+
     container.appendChild(this.renderer.domElement);
-    /** 创建默认迷宫实例 */
-
-    this.maze = new _maze["default"](this.scene, (0, _mazeConfig["default"])({}));
-    /** 创建标题实例 */
-
-    this.title = new _text["default"](this.scene, 'Maze Runner', {
-      x: 0,
-      y: 10,
-      z: 0
-    }, _textConfig["default"].titleConfig);
     /** 开始渲染 */
 
     this.render();
@@ -52468,27 +53670,93 @@ var Game = /*#__PURE__*/function () {
   }
 
   _createClass(Game, [{
-    key: "changeMazeSetting",
-    value: function changeMazeSetting(maze, hero) {
-      console.log("pass: ", hero);
-      if (Game.status === 'Prepare') this.maze.initMaze(maze, hero);
+    key: "_initScene",
+    value: function _initScene() {
+      /** 创建场景 */
+      this.scene = (0, _threeBasicsCreator.sceneCreator)();
+      /** 创建渲染器 */
+
+      this.renderer = (0, _threeBasicsCreator.rendererCreator)();
+      /** 创建灯光 */
+
+      this.light = (0, _threeUtilsCreator.lightCreator)(_colorConfig.themeColors.light, 1);
+      this.light.position.set(-1, 2, 10);
+      this.scene.add(this.light);
+      this.scene.background = (0, _threeUtilsCreator.colorCreator)(_colorConfig.themeColors.background);
+      /** 创建镜头管理器 */
+
+      this.cameraController = new _cameraController["default"]();
+      this.cameraController.addNewCamera(_cameraConfigs.mainCameraConfig, 'main');
     }
   }, {
-    key: "changeHeroSetting",
-    value: function changeHeroSetting(setting) {
-      console.log(setting);
-      if (Game.status === 'Prepare') this.maze.initHero(setting);
+    key: "_initGame",
+    value: function _initGame() {
+      /** 创建默认迷宫实例 */
+      this.maze = new _maze["default"](this.scene);
+      /** 创建英雄 */
+
+      this.hero = new _hero["default"](this.scene);
+      /** 创建文字管理器 */
+
+      this.textController = new _textController["default"](this.scene);
+      this.textController.addNewText(_textConfig["default"].titleConfig, 'title');
+    } // changeMazeSetting(setting) {
+    //   this.dim = getMazeConfig(maze).dim;
+    //   if (Game.status === 'Prepare') this.maze.generateObject(maze);
+    // }
+    // changeHeroSetting(setting) {
+    //   if (Game.status === 'Prepare') this.hero.generateObject(setting);
+    // }
+
+  }, {
+    key: "settingChange",
+    value: function settingChange(tab, setting) {
+      if (Game.status !== 'Prepare') return;
+
+      switch (tab) {
+        case 'hero':
+          this.hero.generateObject(setting);
+          break;
+
+        case 'maze':
+          this.maze.generateObject(setting);
+          break;
+
+        case 'wall':
+          this.maze.generateObject(setting);
+          break;
+      }
+    }
+  }, {
+    key: "tabSwitch",
+    value: function tabSwitch(setting) {
+      switch (setting) {
+        case 'hero':
+          this.cameraController.repositionCamera('main', {
+            x: (this.dim - 1) / 2,
+            y: 4,
+            z: (this.dim - 1) / 2 + 3
+          });
+          break;
+
+        case 'maze':
+          this.cameraController.repositionCamera('main', {
+            x: (this.dim - 1) / 2,
+            y: 10,
+            z: this.dim - 1 + 10
+          });
+      }
     }
   }, {
     key: "render",
     value: function render() {
+      var scene = this.scene;
       var renderer = this.renderer;
       var canvas = this.renderer.domElement;
       var container = this.container;
-      var camera = this.mainCamera;
-      var scene = this.scene;
+      var cameraController = this.cameraController;
       var maze = this.maze;
-      var control = this.orbitControl;
+      var hero = this.hero; // const control = this.orbitControl;
 
       function resizeRendererToDisplaySize(renderer, container) {
         var canvas = renderer.domElement;
@@ -52503,20 +53771,22 @@ var Game = /*#__PURE__*/function () {
       function animate(time) {
         time *= 0.001; // convert time to seconds
 
+        /** 处理窗口大小变化情况 */
+
         if (resizeRendererToDisplaySize(renderer, container)) {
           renderer.setSize(container.clientWidth, container.clientHeight, false);
-          camera.aspect = canvas.clientWidth / canvas.clientHeight;
-          camera.updateProjectionMatrix();
-        }
+          cameraController.adjustAspect(canvas.clientWidth / canvas.clientHeight);
+        } // // let thisLoop = Date.now();
+        // // let fps = 1000 / (thisLoop - lastLoop);
+        // // lastLoop = thisLoop;
 
-        var thisLoop = Date.now();
-        var fps = 1000 / (thisLoop - lastLoop);
-        lastLoop = thisLoop;
-        control.update();
+
         maze.renderObject(time);
+        hero.renderObject(time);
+        cameraController.renderObject(time);
         renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.render(scene, camera);
-        requestAnimationFrame(animate);
+        renderer.render(scene, cameraController.getCamera());
+        requestAnimationFrame(animate); // control.update();
       }
 
       requestAnimationFrame(animate);
@@ -52533,8 +53803,8 @@ var Game = /*#__PURE__*/function () {
       console.log("Game End");
     }
   }, {
-    key: "initGame",
-    value: function initGame() {
+    key: "startGame",
+    value: function startGame() {
       Game.status = 'Game Begin'; // if (this.maze) {
       //   this.maze.destory();
       //   this.scene.remove.apply(this.scene, this.scene.children);
@@ -52576,7 +53846,7 @@ _defineProperty(Game, "getInstance", function () {
 var _default = Game;
 exports["default"] = _default;
 
-},{"../utils/threeBasicsCreator":24,"../utils/threeUtilsCreator":26,"./consts/cameraConfigs":10,"./consts/colorConfig":11,"./consts/mazeConfig":13,"./consts/textConfig":14,"./maze/maze":20,"./maze/text":22}],16:[function(require,module,exports){
+},{"../utils/threeBasicsCreator":29,"../utils/threeUtilsCreator":31,"./consts/cameraConfigs":12,"./consts/colorConfig":13,"./consts/textConfig":16,"./controller/cameraController":18,"./controller/textController":19,"./hero/hero":21,"./maze/maze":25}],21:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52586,17 +53856,15 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports["default"] = void 0;
 
-var _threeGeometryCreator = _interopRequireDefault(require("../utils/threeGeometryCreator"));
+var _geometry = _interopRequireDefault(require("../maze/geometry"));
 
-var _geometry = _interopRequireDefault(require("./maze/geometry"));
+var _heroConfig = _interopRequireDefault(require("../consts/heroConfig"));
 
-var _colorConfig = require("./consts/colorConfig");
+var _threeGeometryCreator = _interopRequireDefault(require("../../utils/threeGeometryCreator"));
 
-var _heroConfig = _interopRequireDefault(require("./consts/heroConfig"));
+var _threeBasicsCreator = require("../../utils/threeBasicsCreator");
 
-var _threeUtilsCreator = require("../utils/threeUtilsCreator");
-
-var _threeBasicsCreator = require("../utils/threeBasicsCreator");
+var _threeUtilsCreator = require("../../utils/threeUtilsCreator");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -52625,7 +53893,7 @@ var Hero = /*#__PURE__*/function (_Geometry) {
 
   var _super = _createSuper(Hero);
 
-  function Hero(scene, heroConfig) {
+  function Hero(scene) {
     var _this;
 
     _classCallCheck(this, Hero);
@@ -52634,21 +53902,26 @@ var Hero = /*#__PURE__*/function (_Geometry) {
     _this.scene = scene;
     _this.coins = 0;
 
-    _this.generateObject(heroConfig);
+    _this.generateObject();
 
     return _this;
   }
 
   _createClass(Hero, [{
     key: "generateObject",
-    value: function generateObject(heroConfig) {
+    value: function generateObject() {
+      var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+      var gameStatus = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+
       /** gc the old objs */
       this.destroyObject();
       /** create new */
 
-      var location = heroConfig.location,
-          geoConfig = heroConfig.geoConfig,
-          skin = heroConfig.skin;
+      var _getHeroConfig = (0, _heroConfig["default"])(settings, gameStatus),
+          location = _getHeroConfig.location,
+          geoConfig = _getHeroConfig.geoConfig,
+          skin = _getHeroConfig.skin;
+
       var heroGeo = (0, _threeGeometryCreator["default"])('hero', geoConfig);
       var material = (0, _threeUtilsCreator.materialCreator)('texture', skin);
       var hero = (0, _threeBasicsCreator.meshCreator)(heroGeo, material);
@@ -52731,7 +54004,7 @@ var Hero = /*#__PURE__*/function (_Geometry) {
 var _default = Hero;
 exports["default"] = _default;
 
-},{"../utils/threeBasicsCreator":24,"../utils/threeGeometryCreator":25,"../utils/threeUtilsCreator":26,"./consts/colorConfig":11,"./consts/heroConfig":12,"./maze/geometry":19}],17:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":29,"../../utils/threeGeometryCreator":30,"../../utils/threeUtilsCreator":31,"../consts/heroConfig":14,"../maze/geometry":24}],22:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52824,7 +54097,7 @@ var Coin = /*#__PURE__*/function (_Geometry) {
 var _default = Coin;
 exports["default"] = _default;
 
-},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"../consts/blockConfig":9,"../consts/colorConfig":11,"./geometry":19}],18:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":29,"../../utils/threeGeometryCreator":30,"../../utils/threeUtilsCreator":31,"../consts/blockConfig":11,"../consts/colorConfig":13,"./geometry":24}],23:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -52911,7 +54184,9 @@ var Floor = /*#__PURE__*/function (_Geometry) {
     value: function renderObject(time) {
       // const objs = Object.values(this.walls);
       // console.log(objs);
-      // Object.values(this.walls).forEach((obj) => obj.renderObject(time));
+      this.walls && Object.values(this.walls).forEach(function (obj) {
+        return obj.renderObject(time);
+      });
       this.objOnBlock && this.objOnBlock.renderObject(time);
     }
   }, {
@@ -52936,28 +54211,27 @@ var Floor = /*#__PURE__*/function (_Geometry) {
     }
   }, {
     key: "genWalls",
-    value: function genWalls(neighbour) {
+    value: function genWalls(neighbour, wallSettings) {
       var walls = {};
       var scene = this.scene;
       var location = this.location;
 
-      function _genWall(width, height, depth, x, y, z) {
+      function _genWall(width, depth, x, y, z) {
         var wall = new _wall["default"](scene, location, {
           width: width,
-          height: height,
           depth: depth
         }, {
           x: z,
           y: y,
           z: x
-        });
+        }, wallSettings);
         return wall;
       }
 
-      if (neighbour.up) walls.up = _genWall(1, 1, 0.1, this.location.row - 0.5, 0.5, this.location.col);
-      if (neighbour.down) walls.down = _genWall(1, 1, 0.1, this.location.row + 0.5, 0.5, this.location.col);
-      if (neighbour.left) walls.left = _genWall(0.1, 1, 1, this.location.row, 0.5, this.location.col - 0.5);
-      if (neighbour.right) walls.right = _genWall(0.1, 1, 1, this.location.row, 0.5, this.location.col + 0.5);
+      if (neighbour.up) walls.up = _genWall(1, 0.1, this.location.row - 0.5, 0.5, this.location.col);
+      if (neighbour.down) walls.down = _genWall(1, 0.1, this.location.row + 0.5, 0.5, this.location.col);
+      if (neighbour.left) walls.left = _genWall(0.1, 1, this.location.row, 0.5, this.location.col - 0.5);
+      if (neighbour.right) walls.right = _genWall(0.1, 1, this.location.row, 0.5, this.location.col + 0.5);
       this.walls = walls;
     }
   }, {
@@ -53010,7 +54284,7 @@ var Floor = /*#__PURE__*/function (_Geometry) {
 var _default = Floor;
 exports["default"] = _default;
 
-},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"../consts/blockConfig":9,"../consts/colorConfig":11,"./coin":17,"./geometry":19,"./monster":21,"./wall":23}],19:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":29,"../../utils/threeGeometryCreator":30,"../../utils/threeUtilsCreator":31,"../consts/blockConfig":11,"../consts/colorConfig":13,"./coin":22,"./geometry":24,"./monster":26,"./wall":28}],24:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53058,7 +54332,7 @@ var Geometry = /*#__PURE__*/function () {
 
 exports["default"] = Geometry;
 
-},{}],20:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -53074,15 +54348,17 @@ var _threeGeometryCreator = _interopRequireDefault(require("../../utils/threeGeo
 
 var _threeUtilsCreator = require("../../utils/threeUtilsCreator");
 
-var _heroConfig = _interopRequireDefault(require("../consts/heroConfig"));
-
 var _mazeConfig = _interopRequireDefault(require("../consts/mazeConfig"));
-
-var _hero = _interopRequireDefault(require("../hero"));
 
 var _floor = _interopRequireDefault(require("./floor"));
 
+var _excluded = ["wallSettings"];
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
+
+function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; var sourceKeys = Object.keys(source); var key, i; for (i = 0; i < sourceKeys.length; i++) { key = sourceKeys[i]; if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } return target; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -53091,45 +54367,30 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
 
 var Maze = /*#__PURE__*/function () {
-  function Maze(scene, mazeConfig) {
+  function Maze(scene) {
     _classCallCheck(this, Maze);
 
-    this.hero = null;
     this.cover = null;
     this.scene = scene;
-    this.initMaze(mazeConfig);
+    this.generateObject();
   }
 
   _createClass(Maze, [{
-    key: "initHero",
-    value: function initHero(heroConfig) {
-      console.log("heroconfig: ", heroConfig);
-      var scene = this.scene;
-      var dim = this.dim;
+    key: "generateObject",
+    value: function generateObject() {
+      var settings = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-      function _genHero() {
-        var hero = new _hero["default"](scene, (0, _heroConfig["default"])(dim, heroConfig || {}));
-        return hero;
-      }
+      var wallSettings = settings.wallSettings,
+          mazeSettings = _objectWithoutProperties(settings, _excluded);
 
-      this.hero.destroyObject();
-      this.hero = _genHero();
-    }
-  }, {
-    key: "initMaze",
-    value: function initMaze(mazeConfig, heroConfig) {
-      console.log("config: ", heroConfig);
+      this.wallSettings = wallSettings;
+      console.log("maze wall: ", wallSettings);
 
-      var _getMazeConfig = (0, _mazeConfig["default"])(mazeConfig),
+      var _getMazeConfig = (0, _mazeConfig["default"])(mazeSettings),
           dim = _getMazeConfig.dim,
           floorTexture = _getMazeConfig.floorTexture;
 
       var scene = this.scene;
-
-      function _genHero() {
-        var hero = new _hero["default"](scene, (0, _heroConfig["default"])(dim, heroConfig || {}));
-        return hero;
-      }
 
       function _genFloorData() {
         var floorData = [];
@@ -53143,6 +54404,27 @@ var Maze = /*#__PURE__*/function () {
               col: j
             });
             temp.push(floor);
+            if (i === 0 && j === 0) floor.genWalls({
+              up: true,
+              left: true
+            }, wallSettings);else if (i === dim - 1 && j === dim - 1) floor.genWalls({
+              down: true,
+              right: true
+            }, wallSettings);else if (i === dim - 1 && j === 0) floor.genWalls({
+              down: true,
+              left: true
+            }, wallSettings);else if (i === 0 && j === dim - 1) floor.genWalls({
+              up: true,
+              right: true
+            }, wallSettings);else if (i === 0) floor.genWalls({
+              up: true
+            }, wallSettings);else if (j === 0) floor.genWalls({
+              left: true
+            }, wallSettings);else if (i === dim - 1) floor.genWalls({
+              down: true
+            }, wallSettings);else if (j === dim - 1) floor.genWalls({
+              right: true
+            }, wallSettings);
           }
 
           floorData.push(temp);
@@ -53153,9 +54435,9 @@ var Maze = /*#__PURE__*/function () {
 
       function _genFloorCover() {
         var coverGeo = (0, _threeGeometryCreator["default"])('block', {
-          boxWidth: dim,
-          boxHeight: 0.1,
-          boxDepth: dim
+          width: dim,
+          height: 0.1,
+          depth: dim
         });
         var coverMaterial = (0, _threeUtilsCreator.materialCreator)('texture', floorTexture);
         var cover = (0, _threeBasicsCreator.meshCreator)(coverGeo, coverMaterial);
@@ -53167,25 +54449,21 @@ var Maze = /*#__PURE__*/function () {
       }
 
       this.destroyMaze();
-      this.hero = _genHero();
       this.floorData = _genFloorData();
       this.floorCover = _genFloorCover();
-      this.dim = dim || 10;
+      window["DEFAULT_DIM"] = dim; // this.dim = dim || 10;
     }
   }, {
     key: "destroyMaze",
     value: function destroyMaze() {
-      var _this = this,
-          _this$hero;
+      var _this = this;
 
-      this.iterateFloor(function (i, j) {
+      this.floorData && this.iterateFloor(function (i, j) {
         _this.floorData[i][j].destroyObject();
       });
-      (_this$hero = this.hero) === null || _this$hero === void 0 ? void 0 : _this$hero.destroyObject();
       this.scene.remove(this.floorCover);
       delete this.floorCover;
       this.floorData = null;
-      this.hero = null;
     }
   }, {
     key: "initGame",
@@ -53193,13 +54471,13 @@ var Maze = /*#__PURE__*/function () {
       var _this2 = this;
 
       // this.gameStatus = 'Game Begin';
+      var dim = window["DEFAULT_DIM"];
       var coinsCount = this.coinsCount;
       var monsterCount = this.monsterCount;
-      var dim = this.dim;
       var blockData = this.floorData;
       var mazeRawData = (0, _mazeGeneration["default"])({
-        width: this.dim,
-        height: this.dim,
+        width: dim,
+        height: dim,
         seed: Math.random() * 1000
       });
 
@@ -53229,7 +54507,7 @@ var Maze = /*#__PURE__*/function () {
 
 
       this.iterateFloor(function (i, j) {
-        _this2.floorData[i][j].genWalls(mazeRawData.toJSON().rows[i][j]);
+        _this2.floorData[i][j].genWalls(mazeRawData.toJSON().rows[i][j], _this2.wallSettings);
       });
 
       _genCoin();
@@ -53244,13 +54522,14 @@ var Maze = /*#__PURE__*/function () {
       this.iterateFloor(function (i, j) {
         _this3.floorData[i][j].renderObject(time);
       });
-      this.hero.renderObject(time);
     }
   }, {
     key: "iterateFloor",
     value: function iterateFloor(cb) {
-      for (var i = 0; i < this.dim; i++) {
-        for (var j = 0; j < this.dim; j++) {
+      var dim = window["DEFAULT_DIM"] || 15;
+
+      for (var i = 0; i < dim; i++) {
+        for (var j = 0; j < dim; j++) {
           cb(i, j);
         }
       }
@@ -53288,7 +54567,7 @@ var Maze = /*#__PURE__*/function () {
 var _default = Maze;
 exports["default"] = _default;
 
-},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"../consts/heroConfig":12,"../consts/mazeConfig":13,"../hero":16,"./floor":18,"maze-generation":2}],21:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":29,"../../utils/threeGeometryCreator":30,"../../utils/threeUtilsCreator":31,"../consts/mazeConfig":15,"./floor":23,"maze-generation":3}],26:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -53383,7 +54662,7 @@ var Monster = /*#__PURE__*/function (_Geometry) {
 var _default = Monster;
 exports["default"] = _default;
 
-},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"../consts/blockConfig":9,"../consts/colorConfig":11,"./geometry":19}],22:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":29,"../../utils/threeGeometryCreator":30,"../../utils/threeUtilsCreator":31,"../consts/blockConfig":11,"../consts/colorConfig":13,"./geometry":24}],27:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -53401,13 +54680,7 @@ var _threeUtilsCreator = require("../../utils/threeUtilsCreator");
 
 var _geometry = _interopRequireDefault(require("./geometry"));
 
-var THREE = _interopRequireWildcard(require("three"));
-
 var _excluded = ["fontPath"];
-
-function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
-
-function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -53467,12 +54740,11 @@ var TextContent = /*#__PURE__*/function (_Geometry) {
       var textGeo, material, text;
       var loader = (0, _threeUtilsCreator.fontLoaderCreator)();
       loader.load(fontPath, function (font) {
-        console.log(font);
         textGeo = (0, _threeGeometryCreator["default"])('text', Object.assign({
           content: _this.content,
           font: font
         }, detailConfig));
-        material = [(0, _threeUtilsCreator.materialCreator)('color', 0xffffff), (0, _threeUtilsCreator.materialCreator)('color', 0xffffff)];
+        material = [(0, _threeUtilsCreator.materialCreator)('color', 0xffffff), (0, _threeUtilsCreator.materialCreator)('texture', 'src/assets/textures/font.jpeg')];
         text = (0, _threeBasicsCreator.meshCreator)(textGeo, material);
         text.position.x = _this.position.x;
         text.position.y = _this.position.y;
@@ -53501,7 +54773,7 @@ var TextContent = /*#__PURE__*/function (_Geometry) {
 var _default = TextContent;
 exports["default"] = _default;
 
-},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"./geometry":19,"three":8}],23:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":29,"../../utils/threeGeometryCreator":30,"../../utils/threeUtilsCreator":31,"./geometry":24}],28:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -53520,6 +54792,14 @@ var _threeBasicsCreator = require("../../utils/threeBasicsCreator");
 var _threeUtilsCreator = require("../../utils/threeUtilsCreator");
 
 var _colorConfig = require("../consts/colorConfig");
+
+var _wallConfig = _interopRequireDefault(require("../consts/wallConfig"));
+
+var Three = _interopRequireWildcard(require("three"));
+
+function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function _getRequireWildcardCache(nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
+
+function _interopRequireWildcard(obj, nodeInterop) { if (!nodeInterop && obj && obj.__esModule) { return obj; } if (obj === null || _typeof(obj) !== "object" && typeof obj !== "function") { return { "default": obj }; } var cache = _getRequireWildcardCache(nodeInterop); if (cache && cache.has(obj)) { return cache.get(obj); } var newObj = {}; var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor; for (var key in obj) { if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) { var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null; if (desc && (desc.get || desc.set)) { Object.defineProperty(newObj, key, desc); } else { newObj[key] = obj[key]; } } } newObj["default"] = obj; if (cache) { cache.set(obj, newObj); } return newObj; }
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
@@ -53548,7 +54828,7 @@ var Wall = /*#__PURE__*/function (_Geometry) {
 
   var _super = _createSuper(Wall);
 
-  function Wall(scene, location, wallConfig, position) {
+  function Wall(scene, location, wallConfig, position, settings) {
     var _this;
 
     _classCallCheck(this, Wall);
@@ -53557,7 +54837,7 @@ var Wall = /*#__PURE__*/function (_Geometry) {
     _this.scene = scene;
     _this.location = location;
 
-    _this.generateObject(wallConfig, position);
+    _this.generateObject(wallConfig, position, settings);
 
     return _this;
   }
@@ -53565,8 +54845,16 @@ var Wall = /*#__PURE__*/function (_Geometry) {
   _createClass(Wall, [{
     key: "generateObject",
     value: function generateObject(wallConfig, position) {
+      var settings = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
+      console.log("wall: ", settings);
+
+      var _getWallConfig = (0, _wallConfig["default"])(settings),
+          surface = _getWallConfig.surface,
+          height = _getWallConfig.height;
+
+      wallConfig.height = height;
       var wallGeo = (0, _threeGeometryCreator["default"])("wall", wallConfig);
-      var wallMaterial = (0, _threeUtilsCreator.materialCreator)("color", 0x66ccff);
+      var wallMaterial = (0, _threeUtilsCreator.materialCreator)("texture", surface);
       var wall = (0, _threeBasicsCreator.meshCreator)(wallGeo, wallMaterial);
       wall.position.x = position.x;
       wall.position.y = position.y;
@@ -53576,7 +54864,16 @@ var Wall = /*#__PURE__*/function (_Geometry) {
     }
   }, {
     key: "renderObject",
-    value: function renderObject(time) {}
+    value: function renderObject(time) {// let { surface, height } = getWallConfig(window['WALL_SETTINGS'] || {})
+      // console.log(surface)
+      // this.wall.material.map = this.loader.load(surface);
+      // this.wall.material.needsUpdate = true
+    }
+  }, {
+    key: "destroyObject",
+    value: function destroyObject() {
+      this.scene.remove(this.wall);
+    }
   }]);
 
   return Wall;
@@ -53585,7 +54882,7 @@ var Wall = /*#__PURE__*/function (_Geometry) {
 var _default = Wall;
 exports["default"] = _default;
 
-},{"../../utils/threeBasicsCreator":24,"../../utils/threeGeometryCreator":25,"../../utils/threeUtilsCreator":26,"../consts/colorConfig":11,"./geometry":19}],24:[function(require,module,exports){
+},{"../../utils/threeBasicsCreator":29,"../../utils/threeGeometryCreator":30,"../../utils/threeUtilsCreator":31,"../consts/colorConfig":13,"../consts/wallConfig":17,"./geometry":24,"three":10}],29:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -53665,7 +54962,7 @@ var meshCreator = function meshCreator(geometry, material) {
 
 exports.meshCreator = meshCreator;
 
-},{"three":8,"three-orbitcontrols":7}],25:[function(require,module,exports){
+},{"three":10,"three-orbitcontrols":9}],30:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -53740,10 +55037,10 @@ var textCreator = function textCreator(textConfig) {
 };
 
 var boxCreator = function boxCreator(config) {
-  config = Object.values(config);
-
-  var box = _construct(Three.BoxGeometry, _toConsumableArray(config));
-
+  var width = config.width,
+      height = config.height,
+      depth = config.depth;
+  var box = new Three.BoxGeometry(width, height, depth);
   return box;
 };
 
@@ -53795,7 +55092,7 @@ var monsterCreator = function monsterCreator(config) {
 var _default = geometryCreator;
 exports["default"] = _default;
 
-},{"three":8}],26:[function(require,module,exports){
+},{"three":10}],31:[function(require,module,exports){
 "use strict";
 
 function _typeof(obj) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (obj) { return typeof obj; } : function (obj) { return obj && "function" == typeof Symbol && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }, _typeof(obj); }
@@ -53855,4 +55152,4 @@ var fontLoaderCreator = function fontLoaderCreator() {
 
 exports.fontLoaderCreator = fontLoaderCreator;
 
-},{"three":8}]},{},[1]);
+},{"three":10}]},{},[1]);

@@ -37,7 +37,7 @@ class Floor extends Geometry {
   renderObject(time) {
     // const objs = Object.values(this.walls);
     // console.log(objs);
-    // Object.values(this.walls).forEach((obj) => obj.renderObject(time));
+    this.walls && Object.values(this.walls).forEach((obj) => obj.renderObject(time));
     this.objOnBlock && this.objOnBlock.renderObject(time);
   }
 
@@ -58,20 +58,20 @@ class Floor extends Geometry {
     return true;
   }
 
-  genWalls(neighbour) {
+  genWalls(neighbour, wallSettings) {
     let walls = {};
     let scene = this.scene;
     let location = this.location;
 
-    function _genWall(width, height, depth, x, y, z) {
-      let wall = new Wall(scene, location, { width, height, depth }, { x: z, y: y, z: x });
+    function _genWall(width, depth, x, y, z) {
+      let wall = new Wall(scene, location, { width, depth }, { x: z, y: y, z: x }, wallSettings);
       return wall;
     }
-    
-    if (neighbour.up) walls.up = _genWall(1, 1, 0.1, this.location.row - 0.5, 0.5, this.location.col);
-    if (neighbour.down) walls.down = _genWall(1, 1, 0.1, this.location.row + 0.5, 0.5, this.location.col);
-    if (neighbour.left) walls.left = _genWall(0.1, 1, 1, this.location.row, 0.5, this.location.col - 0.5);
-    if (neighbour.right) walls.right = _genWall(0.1, 1, 1, this.location.row, 0.5, this.location.col + 0.5);
+
+    if (neighbour.up) walls.up = _genWall(1, 0.1, this.location.row - 0.5, 0.5,  this.location.col);
+    if (neighbour.down) walls.down = _genWall(1, 0.1, this.location.row + 0.5, 0.5, this.location.col);
+    if (neighbour.left) walls.left = _genWall(0.1, 1, this.location.row, 0.5, this.location.col - 0.5);
+    if (neighbour.right) walls.right = _genWall(0.1, 1, this.location.row, 0.5, this.location.col + 0.5);
     this.walls = walls;
   }
 

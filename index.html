@@ -27,6 +27,12 @@
        height: 100%;
        display: block;
     }
+    .panel {
+      display: none;
+    }
+    .panel.active {
+      display: block;
+    }
     .content_wrapper {
       display: flex;
       height: 40px;
@@ -85,7 +91,8 @@
       height: 30px;
       width: 30px; 
       margin-left: 20px;
-    margin-right: 20px;     
+      margin-right: 20px;
+      border-radius: 5px;
     }
     
     input[type=radio] {
@@ -104,7 +111,7 @@
 </head>
 <body>
 
-  <div id="panel">
+  <div class="panel active" id="panel">
     <!-- <div id="cameraGroup">
       <button id="cameraOne">Main Camera</button>
       <button id="cameraTwo">Upper Camera</button>
@@ -159,12 +166,12 @@
     </div>
 
     <div class="content" id="hero_setting">
-      <img class="content_img" src="src/assets/other/hero.png" style="height: 25px; width: 25px"/>
+      <img class="content_img" src="src/assets/other/hero.png" style="height: 30px; width: 30px"/>
 
       <div>
         <legend class="content_title">Hero Shape</legend>
         <div class="content_section" id="hero_shape">
-          <img class="content_hero_shape" id="octa" src="src/assets/other/octa.png" />
+          <img class="content_hero_shape active" id="octa" src="src/assets/other/octa.png" />
           <img class="content_hero_shape" id="cone" src="src/assets/other/cone.png" />
           <img class="content_hero_shape" id="sphere" src="src/assets/other/sphere.png" />
           <img class="content_hero_shape" id="cylinder" src="src/assets/other/cylinder.png" />
@@ -174,9 +181,34 @@
       <div>
         <legend class="content_title">Hero Skin</legend>
         <div class="content_section" id="hero_skin">
-          <img class="content_hero_shape" id="blood" src="src/assets/textures/hero/blood.jpeg"></img>
+          <img class="content_hero_shape active" id="blood" src="src/assets/textures/hero/blood.jpeg"></img>
           <img class="content_hero_shape" id="steel" src="src/assets/textures/hero/steel.jpeg"></img>
           <img class="content_hero_shape" id="diamond" src="src/assets/textures/hero/diamond.jpeg"></img>
+          <img class="content_hero_shape" id="color" src="src/assets/textures/hero/color.jpeg"></img>
+        </div>
+      </div>
+    </div>
+
+    <div class="content" id="wall_setting">
+      <img class="content_img" src="src/assets/other/wall.png" style="height: 25px; width: 25px"/>
+
+      <div>
+        <legend class="content_title">Wall Surface</legend>
+        <div class="content_section" id="wall_surface">
+          <img class="content_hero_shape active" id="brick" src="src/assets/textures/wall/brick.jpeg" />
+          <img class="content_hero_shape" id="wood" src="src/assets/textures/wall/wood.jpeg" />
+          <img class="content_hero_shape" id="glass" src="src/assets/textures/wall/glass.jpeg" />
+        </div>
+      </div>
+
+      <div>
+        <legend class="content_title">Wall Height</legend>
+        <div class="content_section" id="wall_height">
+          <input class="radio" id="low" type="radio" value="low" name="wall_height" checked>
+          <label for="wall_height">Low</label>
+
+          <input class="radio" id="high" type="radio" value="high" name="wall_height">
+          <label for="wall_height">High</label>
         </div>
       </div>
     </div>
@@ -184,7 +216,7 @@
 
 
 
-    <!-- <button id="start">Start Game</button> -->
+    <button id="start">Start Game</button>
   </div>
   
 

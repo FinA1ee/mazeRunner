@@ -1,7 +1,7 @@
 const blockConfig = {
-  boxWidth: 1,
-  boxHeight: 0.01,
-  boxDepth: 1
+  width: 1,
+  height: 0.01,
+  depth: 1
 }
 
 const coinConfig = {
