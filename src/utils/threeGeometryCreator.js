@@ -1,4 +1,5 @@
 import * as Three from 'three';
+import { TextGeometry } from '../../node_modules/three/examples/jsm/geometries/TextGeometry';
 
 const geometryCreator = (kind, config) => {
   switch (kind) {
@@ -20,7 +21,7 @@ const geometryCreator = (kind, config) => {
 
 const textCreator = (textConfig) => {
   let { content, ...detailConfig } = textConfig;
-  let text = new Three.TextGeometry(content, detailConfig);
+  let text = new TextGeometry(content, detailConfig);
   return text;
 }
 

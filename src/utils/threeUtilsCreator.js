@@ -1,4 +1,5 @@
 import * as Three from 'three';
+import { FontLoader } from '../../node_modules/three/examples/jsm/loaders/FontLoader';
 
 const materialCreator = (kind, value) => {
   let material;
@@ -27,7 +28,7 @@ const lightCreator = (colorConfig, intensity) => {
 }
 
 const fontLoaderCreator = () => {
-  return new Three.FontLoader();
+  return new FontLoader();
 }
 
 export { colorCreator, lightCreator, materialCreator, fontLoaderCreator };

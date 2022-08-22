@@ -1,5 +1,5 @@
 # mazeRunner
-A simple 3D maze game powered by Web Dev Server and Three.js.
+A simple 3D maze game powered by Three.js and Webpack.
 
 - Press W, A, S, D to move your hero.
 - Coin gold.
