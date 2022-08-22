@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "testMaze": "node mazeGenerator.js",
     "start": "npx webpack server --port 8000",
-    "build": "browserify index.js > bundle.js"
+    "build": "npx webpack ./index.js"
   },
   "repository": {
     "type": "git",

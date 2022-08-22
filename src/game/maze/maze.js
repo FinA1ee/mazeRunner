@@ -17,7 +17,7 @@ class Maze {
 
     const { wallSettings, ...mazeSettings } = settings
     this.wallSettings = wallSettings;
-    console.log("maze wall: ", wallSettings);
+
     const { dim, floorTexture } = getMazeConfig(mazeSettings);
     let scene = this.scene;
 

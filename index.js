@@ -154,7 +154,7 @@ const handleHeroMoveInput = (e) => {
 
 const handleGameStartInput = (e) => {
   if (e.key && e.code === 'KeyR') {
-    game && game.initGame();
+    game && game.startGame();
   }
 }
 
