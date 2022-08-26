@@ -1,5 +1,7 @@
 import * as Three from 'three';
+import { BufferGeometry, Material } from 'three';
 import OrbitControls from 'three-orbitcontrols';
+import { CameraConfig } from '../types/basicCreatorTypes';
 
 const rendererCreator = () => {
   let renderer = new Three.WebGLRenderer();
@@ -8,7 +10,7 @@ const rendererCreator = () => {
   return renderer;
 }
 
-const cameraCreator = (cameraConfig) => {
+const cameraCreator = (cameraConfig: CameraConfig) => {
   const { fov, aspect, near, far, position, rotation } = cameraConfig;
   let camera = new Three.PerspectiveCamera(fov, aspect, near, far);
 
@@ -30,18 +32,18 @@ const sceneCreator = () => {
   return new Three.Scene();
 }
 
-const orbitControlCreator = (camera, domElement, config) => {
-  const { position: {x, y, z}, autoRotate } = config;
+// const orbitControlCreator = (camera, domElement, config) => {
+//   const { position: {x, y, z}, autoRotate } = config;
 
-  let control = new OrbitControls(camera, domElement);
-  control.target.set( x, y, z );
-  control.autoRotate = autoRotate;
+//   let control = new OrbitControls(camera, domElement);
+//   control.target.set( x, y, z );
+//   control.autoRotate = autoRotate;
 
-  return control;
-}
+//   return control;
+// }
 
-const meshCreator = (geometry, material) => {
+const meshCreator = (geometry: BufferGeometry, material: Material) => {
   return new Three.Mesh(geometry, material);
 }
 
-export { rendererCreator, cameraCreator, sceneCreator, orbitControlCreator, meshCreator};
+export { rendererCreator, cameraCreator, sceneCreator, meshCreator};
